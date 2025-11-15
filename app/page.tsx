@@ -11,6 +11,73 @@ import { format } from "date-fns";
 import { fi, enUS } from "date-fns/locale";
 import { TranslationsProvider, useTranslations } from "@/lib/use-translations";
 
+// Data source URLs
+// Predictions are fetched from n8n via GET (JSON response).
+// You can override this with NEXT_PUBLIC_PREDICTIONS_URL in .env.local if needed.
+const PREDICTIONS_URL =
+  process.env.NEXT_PUBLIC_PREDICTIONS_URL ||
+  "https://otsobear.app.n8n.cloud/webhook/34f21b26-15b9-4fac-b525-320d4295caf4";
+const CALLS_URL =
+  process.env.NEXT_PUBLIC_CALLS_URL || "api/calls.json";
+
+// Map the n8n response shape to our ShortagePrediction[] domain model.
+function mapPredictionsResponse(raw: any): ShortagePrediction[] {
+  // If it already looks like ShortagePrediction[], return as-is
+  if (Array.isArray(raw) && raw.length > 0 && raw[0] && typeof raw[0] === "object") {
+    const first = raw[0] as any;
+    if ("id" in first && "sku" in first && "riskScore" in first) {
+      return raw as ShortagePrediction[];
+    }
+  }
+
+  const root = Array.isArray(raw) ? raw[0] : raw;
+  const orders = root?.orders;
+  if (!Array.isArray(orders)) return [];
+
+  const predictions: ShortagePrediction[] = [];
+
+  for (const order of orders) {
+    const orderNumber = order.order_number ?? "UNKNOWN_ORDER";
+    const customerNumber = order.customer_number ?? "Unknown customer";
+    const items = Array.isArray(order.items) ? order.items : [];
+
+    for (const item of items) {
+      // Optionally skip truly low-risk items
+      if (
+        typeof item.risk_level === "string" &&
+        item.risk_level.toUpperCase() === "LOW"
+      ) {
+        continue;
+      }
+
+      const productCode = item.product_code ?? "UNKNOWN_PRODUCT";
+      const productInfo = item.product_info ?? {};
+      const productName =
+        (productInfo && (productInfo["Tuote"] as string)) || productCode;
+      const stockoutProbability =
+        typeof item.stockout_probability === "number"
+          ? item.stockout_probability
+          : 0;
+
+      const id = `${orderNumber}-${productCode}`;
+
+      predictions.push({
+        id,
+        sku: productCode,
+        productName,
+        customerName: customerNumber,
+        riskScore: stockoutProbability,
+        status: "pending",
+        orderId: orderNumber,
+        // n8n payload doesn't include replacements yet, so leave empty
+        suggestedReplacements: [],
+      });
+    }
+  }
+
+  return predictions;
+}
+
 function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" | "en") => void }) {
   const [predictions, setPredictions] = useState<ShortagePrediction[]>([]);
   const [calls, setCalls] = useState<CallRecord[]>([]);
@@ -24,13 +91,26 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log(
+          "[Dashboard] Sending initial predictions request to",
+          PREDICTIONS_URL
+        );
+
         const [predictionsRes, callsRes] = await Promise.all([
-          fetch("/api/predictions.json"),
-          fetch("/api/calls.json"),
+          fetch(PREDICTIONS_URL),
+          fetch(CALLS_URL),
         ]);
 
-        const predictionsData = await predictionsRes.json();
+        const rawPredictions = await predictionsRes.json();
         const callsData = await callsRes.json();
+
+        const predictionsData = mapPredictionsResponse(rawPredictions);
+
+        console.log(
+          "[Dashboard] Received initial predictions",
+          Array.isArray(predictionsData) ? predictionsData.length : "unknown",
+          "items"
+        );
 
         setPredictions(predictionsData);
         setCalls(callsData);
@@ -55,13 +135,26 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
 
     const pollInterval = setInterval(async () => {
       try {
+        console.log(
+          "[Dashboard] Polling predictions from",
+          PREDICTIONS_URL
+        );
+
         const [predictionsRes, callsRes] = await Promise.all([
-          fetch("/api/predictions.json"),
-          fetch("/api/calls.json"),
+          fetch(PREDICTIONS_URL),
+          fetch(CALLS_URL),
         ]);
 
-        const predictionsData = await predictionsRes.json();
+        const rawPredictions = await predictionsRes.json();
         const callsData = await callsRes.json();
+
+        const predictionsData = mapPredictionsResponse(rawPredictions);
+
+        console.log(
+          "[Dashboard] Polling response received:",
+          Array.isArray(predictionsData) ? predictionsData.length : "unknown",
+          "prediction items"
+        );
 
         // Only update state if data has changed (compare JSON strings)
         setPredictions((prev) => {
