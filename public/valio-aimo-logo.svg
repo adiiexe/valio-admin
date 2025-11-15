@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 450 180" fill="none">
+  <!-- Based on the Valio Aimo brand image provided -->
+  <defs>
+    <style>
+      .valio-text { fill: white; font-family: Arial, sans-serif; font-weight: 600; }
+    </style>
+  </defs>
+  
+  <!-- "Aimo" in script style -->
+  <text x="50" y="120" class="valio-text" font-size="72" font-style="italic" font-weight="400">Aimo</text>
+  
+  <!-- "VALIO" in caps -->
+  <text x="280" y="85" class="valio-text" font-size="32" letter-spacing="4">VALIO</text>
+</svg>
+

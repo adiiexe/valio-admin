@@ -1,0 +1,160 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ShortagePrediction } from "@/lib/types";
+import { Phone, CheckCircle, Package, TrendingUp } from "lucide-react";
+
+interface ShortageDetailsSheetProps {
+  shortage: ShortagePrediction | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onTriggerCall: (id: string) => void;
+  onMarkResolved: (id: string) => void;
+}
+
+export function ShortageDetailsSheet({
+  shortage,
+  isOpen,
+  onClose,
+  onTriggerCall,
+  onMarkResolved,
+}: ShortageDetailsSheetProps) {
+  const [isTriggering, setIsTriggering] = useState(false);
+
+  if (!shortage) return null;
+
+  const handleTriggerCall = async () => {
+    setIsTriggering(true);
+    await onTriggerCall(shortage.id);
+    setIsTriggering(false);
+  };
+
+  const riskPercentage = Math.round(shortage.riskScore * 100);
+
+  return (
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent className="w-full border-neutral-800 bg-neutral-950 sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle className="text-xl text-white">
+            Shortage Details
+          </SheetTitle>
+          <SheetDescription className="text-neutral-400">
+            Review and take action on predicted shortage
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="mt-6 space-y-6">
+          {/* Product Info */}
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-neutral-500" />
+                  <h3 className="font-semibold text-white">
+                    {shortage.productName}
+                  </h3>
+                </div>
+                <p className="mt-1 text-sm text-neutral-400">
+                  SKU: {shortage.sku}
+                </p>
+                <p className="text-sm text-neutral-400">
+                  Customer: {shortage.customerName}
+                </p>
+                <p className="text-sm text-neutral-400">
+                  Order: {shortage.orderId}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="h-4 w-4 text-red-400" />
+                  <span className="text-2xl font-bold text-red-400">
+                    {riskPercentage}%
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-500">Risk Score</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Replacement Suggestions */}
+          <div>
+            <h4 className="mb-3 text-sm font-medium text-neutral-300">
+              AI Replacement Suggestions
+            </h4>
+            <div className="space-y-3">
+              {shortage.suggestedReplacements.map((replacement, index) => (
+                <div
+                  key={replacement.sku}
+                  className="group rounded-lg border border-neutral-800 bg-neutral-900/50 p-4 transition-all hover:border-blue-500/50 hover:bg-neutral-900"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-white">
+                          {replacement.productName}
+                        </p>
+                        {index === 0 && (
+                          <Badge className="bg-blue-500/20 text-blue-400">
+                            Recommended
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-neutral-500">
+                        SKU: {replacement.sku}
+                      </p>
+                      <p className="mt-2 text-sm text-neutral-400">
+                        {replacement.reason}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {replacement.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="outline"
+                            className="border-neutral-700 bg-neutral-800/30 text-xs text-neutral-400"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 border-t border-neutral-800 pt-6">
+            <Button
+              onClick={handleTriggerCall}
+              disabled={isTriggering || shortage.status !== "pending"}
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+            >
+              <Phone className="mr-2 h-4 w-4" />
+              {isTriggering ? "Triggering..." : "Trigger AI Call"}
+            </Button>
+            <Button
+              onClick={() => onMarkResolved(shortage.id)}
+              variant="outline"
+              disabled={shortage.status === "resolved"}
+              className="flex-1 border-green-500/50 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Mark Resolved
+            </Button>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+

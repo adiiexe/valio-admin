@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50" fill="none">
+  <!-- Simplified Valio Aimo logo based on the brand -->
+  <!-- Stylized "A" from Aimo in script style -->
+  <path d="M8,35 Q8,20 15,15 Q20,12 25,15 L30,35 Q32,40 28,43 Q25,45 20,43 Q15,40 15,35 L18,12 Q20,8 25,10 L35,30 Q38,38 42,40 L48,40 Q48,35 45,28 L38,10 Q35,5 40,5 Q45,5 48,10 Q52,18 54,25 L58,40" 
+        fill="white" 
+        stroke="white" 
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  <!-- Small dot accent -->
+  <circle cx="62" cy="12" r="3.5" fill="white"/>
+</svg>
