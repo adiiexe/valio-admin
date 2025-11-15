@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Phone,
@@ -59,10 +60,13 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
         <div className="flex h-full flex-col">
           {/* Logo/Brand Section */}
           <div className="flex h-16 items-center justify-center border-b border-neutral-800 px-3">
-            <img 
-              src="/valio-aimo-logo.png" 
+            <Image 
+              src="/valio-aimo-logo.png"
               alt="Valio Aimo" 
+              width={120}
+              height={64}
               className="h-full w-full object-contain"
+              unoptimized
             />
           </div>
 

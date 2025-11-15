@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fi, enUS } from "date-fns/locale";
 import { TranslationsProvider, useTranslations } from "@/lib/use-translations";
+import { fetchConversations } from "@/lib/elevenlabs-client";
 
 // Data source URLs
 // Predictions are fetched from n8n via GET (JSON response).
@@ -96,21 +97,62 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
           PREDICTIONS_URL
         );
 
-        const [predictionsRes, callsRes] = await Promise.all([
-          fetch(PREDICTIONS_URL),
-          fetch(CALLS_URL),
-        ]);
+        let predictionsData: ShortagePrediction[] = [];
+        try {
+          const predictionsRes = await fetch(PREDICTIONS_URL);
+          if (predictionsRes.ok) {
+            const rawPredictions = await predictionsRes.json();
+            predictionsData = mapPredictionsResponse(rawPredictions);
+            console.log(
+              "[Dashboard] Received initial predictions",
+              Array.isArray(predictionsData) ? predictionsData.length : "unknown",
+              "items"
+            );
+          } else {
+            console.warn("[Dashboard] Predictions API returned status:", predictionsRes.status);
+          }
+        } catch (predictionsError: any) {
+          console.error("[Dashboard] Failed to fetch predictions:", predictionsError?.message || predictionsError);
+          // Continue with empty array
+        }
 
-        const rawPredictions = await predictionsRes.json();
-        const callsData = await callsRes.json();
-
-        const predictionsData = mapPredictionsResponse(rawPredictions);
-
-        console.log(
-          "[Dashboard] Received initial predictions",
-          Array.isArray(predictionsData) ? predictionsData.length : "unknown",
-          "items"
-        );
+        // Fetch calls: Try static JSON first, then ElevenLabs if available
+        let callsData: CallRecord[] = [];
+        
+        // First, try to load static JSON as base (demo data)
+        try {
+          const callsRes = await fetch(CALLS_URL);
+          if (callsRes.ok) {
+            callsData = await callsRes.json();
+            console.log("[Dashboard] Loaded calls from static JSON:", callsData.length, "items");
+          } else {
+            console.warn("[Dashboard] Static JSON returned status:", callsRes.status);
+          }
+        } catch (fallbackError: any) {
+          console.warn("[Dashboard] Failed to load calls from static JSON:", fallbackError?.message || fallbackError);
+          // Continue with empty array, will try ElevenLabs
+        }
+        
+        // Then try ElevenLabs API - if it has calls, use those instead
+        try {
+          const elevenLabsCalls = await fetchConversations();
+          console.log(
+            "[Dashboard] Received calls from ElevenLabs:",
+            elevenLabsCalls.length,
+            "items"
+          );
+          
+          // If ElevenLabs has calls, use those (they're real calls)
+          if (elevenLabsCalls.length > 0) {
+            callsData = elevenLabsCalls;
+            console.log("[Dashboard] Using ElevenLabs calls instead of static JSON");
+          } else {
+            console.log("[Dashboard] ElevenLabs returned no calls, keeping static JSON demo data");
+          }
+        } catch (elevenLabsError: any) {
+          console.warn("[Dashboard] ElevenLabs API failed, using static JSON:", elevenLabsError?.message || elevenLabsError);
+          // Keep the static JSON data we already loaded (or empty array if that also failed)
+        }
 
         setPredictions(predictionsData);
         setCalls(callsData);
@@ -127,7 +169,7 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
     };
 
     fetchData();
-  }, [toast]);
+  }, [toast, t]);
 
   // Real-time polling for updates (every 2.5 seconds)
   useEffect(() => {
@@ -140,15 +182,40 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
           PREDICTIONS_URL
         );
 
-        const [predictionsRes, callsRes] = await Promise.all([
-          fetch(PREDICTIONS_URL),
-          fetch(CALLS_URL),
-        ]);
+        let predictionsData: ShortagePrediction[] = [];
+        try {
+          const predictionsRes = await fetch(PREDICTIONS_URL);
+          if (predictionsRes.ok) {
+            const rawPredictions = await predictionsRes.json();
+            predictionsData = mapPredictionsResponse(rawPredictions);
+          }
+        } catch (predictionsError) {
+          // Silently fail on polling errors to avoid spam
+          console.error("Polling predictions error:", predictionsError);
+        }
 
-        const rawPredictions = await predictionsRes.json();
-        const callsData = await callsRes.json();
-
-        const predictionsData = mapPredictionsResponse(rawPredictions);
+        // Fetch calls: Try static JSON first, then ElevenLabs if available
+        let callsData: CallRecord[] = [];
+        
+        // First, try to load static JSON as base (demo data)
+        try {
+          const callsRes = await fetch(CALLS_URL);
+          callsData = await callsRes.json();
+        } catch (fallbackError) {
+          // Continue with previous state on fallback failure
+          return;
+        }
+        
+        // Then try ElevenLabs API - if it has calls, use those instead
+        try {
+          const elevenLabsCalls = await fetchConversations();
+          // If ElevenLabs has calls, use those (they're real calls)
+          if (elevenLabsCalls.length > 0) {
+            callsData = elevenLabsCalls;
+          }
+        } catch (elevenLabsError) {
+          // Silently keep static JSON on polling errors
+        }
 
         console.log(
           "[Dashboard] Polling response received:",
@@ -164,9 +231,38 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
         });
 
         setCalls((prev) => {
-          const prevJson = JSON.stringify(prev);
-          const newJson = JSON.stringify(callsData);
-          return prevJson !== newJson ? callsData : prev;
+          // Compare by IDs to detect new calls, not just JSON string comparison
+          const prevIds = new Set(prev.map(c => c.id));
+          const newIds = new Set(callsData.map(c => c.id));
+          
+          // Check if there are new calls or if any existing calls have been updated
+          const hasNewCalls = callsData.some(c => !prevIds.has(c.id));
+          const newCalls = callsData.filter(c => !prevIds.has(c.id));
+          const hasUpdates = prev.some(p => {
+            const updated = callsData.find(c => c.id === p.id);
+            return updated && JSON.stringify(p) !== JSON.stringify(updated);
+          });
+          
+          if (hasNewCalls || hasUpdates || prev.length !== callsData.length) {
+            console.log(
+              "[Dashboard] Calls updated:",
+              callsData.length,
+              "total calls",
+              hasNewCalls ? `(${newCalls.length} new call(s) detected)` : ""
+            );
+            
+            // Show toast notification for new calls
+            if (hasNewCalls && newCalls.length > 0) {
+              const latestCall = newCalls[0];
+              toast({
+                title: t("newCallReceived"),
+                description: `${t("callFrom")} ${latestCall.customerName} - ${latestCall.summary}`,
+              });
+            }
+            
+            return callsData;
+          }
+          return prev;
         });
       } catch (error) {
         // Silently fail on polling errors to avoid spam
@@ -175,7 +271,7 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
     }, 2500); // Poll every 2.5 seconds
 
     return () => clearInterval(pollInterval);
-  }, [isLoading]);
+  }, [isLoading, toast, t]);
 
   const handleTriggerCall = async (shortageId: string) => {
     try {

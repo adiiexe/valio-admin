@@ -81,9 +81,8 @@ export const translations = {
     // Call Outcomes
     outcome: "Tulos",
     accepted: "✓ Hyväksytty",
-    declined: "✗ Hylätty",
-    creditsOnly: "$ Luotto",
-    noAnswer: "— Ei vastausta",
+    credits: "$ Luotto",
+    incomplete: "— Keskeneräinen",
     
     // Call Details
     callConversation: "Puhelun keskustelu",
@@ -91,6 +90,9 @@ export const translations = {
     aiAgent: "AI-agentti",
     callRecording: "Puhelun tallenne",
     willBeAvailable: "Tulee saataville n8n:n kautta ElevenLabsista",
+    noTranscriptAvailable: "Transkriptiä ei saatavilla",
+    loadingAudio: "Ladataan äänitiedostoa...",
+    audioNotAvailable: "Äänitiedosto ei saatavilla",
     photoOfMissingProduct: "Puuttuvan tuotteen kuva",
     callId: "Puhelun ID",
     relatedOrder: "Liittyvä tilaus",
@@ -110,6 +112,8 @@ export const translations = {
     about: "koskien",
     failedToTriggerCall: "AI-puhelun käynnistäminen epäonnistui",
     markedResolved: "Merkitty ratkaistuksi",
+    newCallReceived: "Uusi puhelu vastaanotettu",
+    callFrom: "Puhelu käyttäjältä",
     
     // Demo Mode
     demoMode: "Demo-tila",
@@ -197,9 +201,8 @@ export const translations = {
     // Call Outcomes
     outcome: "Outcome",
     accepted: "✓ Accepted",
-    declined: "✗ Declined",
-    creditsOnly: "$ Credits",
-    noAnswer: "— No Answer",
+    credits: "$ Credits",
+    incomplete: "— Incomplete",
     
     // Call Details
     callConversation: "Call Conversation",
@@ -207,6 +210,9 @@ export const translations = {
     aiAgent: "AI Agent",
     callRecording: "Call Recording",
     willBeAvailable: "Will be available via n8n from ElevenLabs",
+    noTranscriptAvailable: "No transcript available",
+    loadingAudio: "Loading audio...",
+    audioNotAvailable: "Audio not available",
     photoOfMissingProduct: "Photo of Missing Product",
     callId: "Call ID",
     relatedOrder: "Related Order",
@@ -226,6 +232,8 @@ export const translations = {
     about: "about",
     failedToTriggerCall: "Failed to trigger AI call",
     markedResolved: "Marked Resolved",
+    newCallReceived: "New Call Received",
+    callFrom: "Call from",
     
     // Demo Mode
     demoMode: "Demo Mode",

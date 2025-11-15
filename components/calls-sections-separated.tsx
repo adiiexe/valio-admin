@@ -52,16 +52,14 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
 
   const getOutcomeBadge = (outcome: string) => {
     const variants = {
-      replacement_accepted: "text-green-500/80",
-      replacement_declined: "text-red-500/80",
-      credits_only: "text-blue-500/80",
-      no_answer: "text-neutral-400/80",
+      accepted: "text-green-500/80",
+      credits: "text-blue-500/80",
+      incomplete: "text-neutral-400/80",
     };
     const labels = {
-      replacement_accepted: t("accepted"),
-      replacement_declined: t("declined"),
-      credits_only: t("creditsOnly"),
-      no_answer: t("noAnswer"),
+      accepted: t("accepted"),
+      credits: t("credits"),
+      incomplete: t("incomplete"),
     };
     return (
       <span className={variants[outcome as keyof typeof variants]}>

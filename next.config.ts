@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // If your repo name is not the root, set basePath
-  basePath: '/valio-admin',
+  // Only use basePath in production (GitHub Pages)
+  // For local development, basePath should be empty
+  basePath: process.env.NODE_ENV === 'production' ? '/valio-admin' : '',
   trailingSlash: true,
 };
 

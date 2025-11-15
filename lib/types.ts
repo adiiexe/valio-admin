@@ -28,7 +28,7 @@ export type CallRecord = {
   direction: "inbound" | "outbound";
   language: string;
   status: "completed" | "failed" | "in_progress";
-  outcome: "replacement_accepted" | "replacement_declined" | "credits_only" | "no_answer";
+  outcome: "accepted" | "credits" | "incomplete";
   relatedOrderId: string | null;
   relatedSku: string | null;
   summary: string;

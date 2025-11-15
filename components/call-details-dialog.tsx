@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import { CallRecord } from "@/lib/types";
 import { Phone, Clock, Globe, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslations } from "@/lib/use-translations";
+import { fetchConversation } from "@/lib/elevenlabs-client";
 
 interface CallDetailsDialogProps {
   call: CallRecord | null;
@@ -24,20 +26,43 @@ export function CallDetailsDialog({
   onClose,
 }: CallDetailsDialogProps) {
   const { t } = useTranslations();
-  if (!call) return null;
+  const [fullCall, setFullCall] = useState<CallRecord | null>(call);
+  const [isLoadingTranscript, setIsLoadingTranscript] = useState(false);
+
+  // Fetch full conversation details when dialog opens (always fetch to get latest transcript)
+  useEffect(() => {
+    if (isOpen && call) {
+      setIsLoadingTranscript(true);
+      // Always fetch full conversation to ensure we have the latest transcript
+      fetchConversation(call.id)
+        .then((fullConversation) => {
+          setFullCall(fullConversation);
+        })
+        .catch((error) => {
+          console.error("[CallDetailsDialog] Failed to fetch full conversation:", error);
+          // If fetch fails, use the call data we have (might have partial transcript)
+          setFullCall(call);
+        })
+        .finally(() => {
+          setIsLoadingTranscript(false);
+        });
+    } else if (call) {
+      setFullCall(call);
+    }
+  }, [isOpen, call]);
+
+  if (!call || !fullCall) return null;
 
   const getOutcomeBadge = (outcome: string) => {
     const variants = {
-      replacement_accepted: "text-green-500/80",
-      replacement_declined: "text-red-500/80",
-      credits_only: "text-blue-500/80",
-      no_answer: "text-neutral-400/80",
+      accepted: "text-green-500/80",
+      credits: "text-blue-500/80",
+      incomplete: "text-neutral-400/80",
     };
     const labels = {
-      replacement_accepted: t("accepted"),
-      replacement_declined: t("declined"),
-      credits_only: t("creditsOnly"),
-      no_answer: t("noAnswer"),
+      accepted: t("accepted"),
+      credits: t("credits"),
+      incomplete: t("incomplete"),
     };
     return (
       <span className={`text-xs ${variants[outcome as keyof typeof variants]}`}>
@@ -46,8 +71,8 @@ export function CallDetailsDialog({
     );
   };
 
-  const minutes = Math.floor(call.durationSeconds / 60);
-  const seconds = call.durationSeconds % 60;
+  const minutes = Math.floor(fullCall.durationSeconds / 60);
+  const seconds = fullCall.durationSeconds % 60;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -57,7 +82,7 @@ export function CallDetailsDialog({
             {t("callConversation")}
           </DialogTitle>
           <DialogDescription className="text-neutral-400">
-            {call.summary}
+            {fullCall.summary}
           </DialogDescription>
         </DialogHeader>
 
@@ -67,26 +92,26 @@ export function CallDetailsDialog({
             <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
               <Phone className="h-3.5 w-3.5 text-neutral-500" />
               <span className="text-xs text-neutral-400">
-                {call.direction === "outbound" ? t("outbound") : t("inbound")}
+                {fullCall.direction === "outbound" ? t("outbound") : t("inbound")}
               </span>
             </div>
             <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
               <Globe className="h-3.5 w-3.5 text-neutral-500" />
               <span className="text-xs text-neutral-400 uppercase">
-                {call.language}
+                {fullCall.language}
               </span>
             </div>
             <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
               <Clock className="h-3.5 w-3.5 text-neutral-500" />
               <span className="text-xs text-neutral-400">
-                {call.status === "in_progress"
+                {fullCall.status === "in_progress"
                   ? t("inProgress")
                   : `${minutes}m ${seconds}s`}
               </span>
             </div>
             <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
               <TrendingUp className="h-3.5 w-3.5 text-neutral-500" />
-              {getOutcomeBadge(call.outcome)}
+              {getOutcomeBadge(fullCall.outcome)}
             </div>
           </div>
 
@@ -96,7 +121,17 @@ export function CallDetailsDialog({
               {t("transcript")}
             </h4>
             <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 max-h-96 overflow-y-auto">
-              {call.transcript.map((turn, index) => (
+              {isLoadingTranscript ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                  <span className="ml-2 text-sm text-neutral-400">{t("loading")}</span>
+                </div>
+              ) : fullCall.transcript.length === 0 ? (
+                <div className="py-8 text-center text-sm text-neutral-500">
+                  {t("noTranscriptAvailable")}
+                </div>
+              ) : (
+                fullCall.transcript.map((turn, index) => (
                 <div
                   key={index}
                   className={`flex ${
@@ -116,18 +151,19 @@ export function CallDetailsDialog({
                     <p className="text-sm leading-relaxed">{turn.text}</p>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           {/* Audio Player */}
-          {call.audioUrl ? (
+          {fullCall.audioUrl ? (
             <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
               <p className="mb-2 text-sm font-medium text-neutral-300">
                 {t("callRecording")}
               </p>
               <audio controls className="w-full">
-                <source src={call.audioUrl} type="audio/mpeg" />
+                <source src={fullCall.audioUrl} type="audio/mpeg" />
                 Your browser does not support the audio element.
               </audio>
             </div>
@@ -150,13 +186,13 @@ export function CallDetailsDialog({
           )}
 
           {/* Photo of Missing Product */}
-          {call.photoUrl && (
+          {fullCall.photoUrl && (
             <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
               <p className="mb-2 text-sm font-medium text-neutral-300">
                 {t("photoOfMissingProduct")}
               </p>
               <img 
-                src={call.photoUrl} 
+                src={fullCall.photoUrl} 
                 alt="Missing product" 
                 className="w-full rounded-lg"
               />
@@ -165,10 +201,10 @@ export function CallDetailsDialog({
 
           {/* Additional Info */}
           <div className="border-t border-neutral-800 pt-4 text-xs text-neutral-500">
-            <p>{t("callId")}: {call.id}</p>
-            <p>{t("time")}: {format(new Date(call.time), "PPpp")}</p>
-            {call.relatedOrderId && <p>{t("relatedOrder")}: {call.relatedOrderId}</p>}
-            {call.relatedSku && <p>{t("relatedSku")}: {call.relatedSku}</p>}
+            <p>{t("callId")}: {fullCall.id}</p>
+            <p>{t("time")}: {format(new Date(fullCall.time), "PPpp")}</p>
+            {fullCall.relatedOrderId && <p>{t("relatedOrder")}: {fullCall.relatedOrderId}</p>}
+            {fullCall.relatedSku && <p>{t("relatedSku")}: {fullCall.relatedSku}</p>}
           </div>
         </div>
       </DialogContent>
