@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShortagePrediction } from "@/lib/types";
 import { Phone, CheckCircle, Package, TrendingUp } from "lucide-react";
+import { useTranslations } from "@/lib/use-translations";
 
 interface ShortageDetailsSheetProps {
   shortage: ShortagePrediction | null;
@@ -28,6 +29,7 @@ export function ShortageDetailsSheet({
   onTriggerCall,
   onMarkResolved,
 }: ShortageDetailsSheetProps) {
+  const { t } = useTranslations();
   const [isTriggering, setIsTriggering] = useState(false);
 
   if (!shortage) return null;
@@ -45,10 +47,10 @@ export function ShortageDetailsSheet({
       <SheetContent className="w-full border-neutral-800 bg-neutral-950 sm:max-w-xl">
         <SheetHeader>
           <SheetTitle className="text-xl text-white">
-            Shortage Details
+            {t("shortageDetails")}
           </SheetTitle>
           <SheetDescription className="text-neutral-400">
-            Review and take action on predicted shortage
+            {t("reviewShortage")}
           </SheetDescription>
         </SheetHeader>
 
@@ -64,13 +66,13 @@ export function ShortageDetailsSheet({
                   </h3>
                 </div>
                 <p className="mt-1 text-sm text-neutral-400">
-                  SKU: {shortage.sku}
+                  {t("sku")}: {shortage.sku}
                 </p>
                 <p className="text-sm text-neutral-400">
-                  Customer: {shortage.customerName}
+                  {t("customer")}: {shortage.customerName}
                 </p>
                 <p className="text-sm text-neutral-400">
-                  Order: {shortage.orderId}
+                  {t("order")}: {shortage.orderId}
                 </p>
               </div>
               <div className="text-right">
@@ -80,7 +82,7 @@ export function ShortageDetailsSheet({
                     {riskPercentage}%
                   </span>
                 </div>
-                <p className="text-xs text-neutral-500">Risk Score</p>
+                <p className="text-xs text-neutral-500">{t("riskScore")}</p>
               </div>
             </div>
           </div>
@@ -88,7 +90,7 @@ export function ShortageDetailsSheet({
           {/* Replacement Suggestions */}
           <div>
             <h4 className="mb-3 text-sm font-medium text-neutral-300">
-              AI Replacement Suggestions
+              {t("aiReplacementSuggestions")}
             </h4>
             <div className="space-y-3">
               {shortage.suggestedReplacements.map((replacement, index) => (
@@ -104,7 +106,7 @@ export function ShortageDetailsSheet({
                         </p>
                         {index === 0 && (
                           <Badge className="bg-blue-500/20 text-blue-400">
-                            Recommended
+                            {t("recommended")}
                           </Badge>
                         )}
                       </div>
@@ -140,7 +142,7 @@ export function ShortageDetailsSheet({
               className="flex-1 bg-blue-600 hover:bg-blue-700"
             >
               <Phone className="mr-2 h-4 w-4" />
-              {isTriggering ? "Triggering..." : "Trigger AI Call"}
+              {isTriggering ? t("triggering") : t("triggerAiCall")}
             </Button>
             <Button
               onClick={() => onMarkResolved(shortage.id)}
@@ -149,7 +151,7 @@ export function ShortageDetailsSheet({
               className="flex-1 border-green-500/50 bg-green-500/10 text-green-400 hover:bg-green-500/20"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
-              Mark Resolved
+              {t("markResolved")}
             </Button>
           </div>
         </div>

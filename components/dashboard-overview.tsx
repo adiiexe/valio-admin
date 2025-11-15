@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShortagePrediction, CallRecord } from "@/lib/types";
 import { AlertTriangle, Phone, CheckCircle2, TrendingUp } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
+import { useTranslations } from "@/lib/use-translations";
 
 interface DashboardOverviewProps {
   predictions: ShortagePrediction[];
@@ -16,6 +17,7 @@ export function DashboardOverview({
   calls,
   onNavigate,
 }: DashboardOverviewProps) {
+  const { t } = useTranslations();
   const activeRisks = predictions.filter((p) => p.status !== "resolved").length;
   const today = new Date().toISOString().split("T")[0];
   const callsToday = calls.filter((c) => c.time.startsWith(today)).length;
@@ -31,36 +33,36 @@ export function DashboardOverview({
 
   const stats = [
     {
-      label: "Active Risks",
+      label: t("activeRisks"),
       value: activeRisks,
-      change: "+2 from yesterday",
+      change: `+2 ${t("fromYesterday")}`,
       icon: AlertTriangle,
       color: "text-red-400",
       bgColor: "bg-red-500/10",
       onClick: () => onNavigate("shortages"),
     },
     {
-      label: "AI Calls Today",
+      label: t("aiCallsToday"),
       value: callsToday,
-      change: "Last call 15 min ago",
+      change: `${t("lastCall")} 15 min ${t("ago")}`,
       icon: Phone,
       color: "text-blue-400",
       bgColor: "bg-blue-500/10",
       onClick: () => onNavigate("calls"),
     },
     {
-      label: "Acceptance Rate",
+      label: t("acceptanceRate"),
       value: `${acceptanceRate}%`,
-      change: "+5% from last week",
+      change: `+5% ${t("fromLastWeek")}`,
       icon: CheckCircle2,
       color: "text-green-400",
       bgColor: "bg-green-500/10",
       onClick: () => onNavigate("calls"),
     },
     {
-      label: "Resolved Today",
+      label: t("resolvedToday"),
       value: predictions.filter((p) => p.status === "resolved").length,
-      change: "3 pending action",
+      change: `3 ${t("pendingAction")}`,
       icon: TrendingUp,
       color: "text-purple-400",
       bgColor: "bg-purple-500/10",
@@ -72,9 +74,9 @@ export function DashboardOverview({
     <div className="space-y-8">
       {/* Welcome Section */}
       <div>
-        <h1 className="text-3xl font-bold text-white">Welcome back</h1>
+        <h1 className="text-3xl font-bold text-white">{t("welcomeBack")}</h1>
         <p className="mt-1 text-neutral-400">
-          Here's what's happening with your operations today
+          {t("dashboardSubtitle")}
         </p>
       </div>
 
@@ -114,7 +116,7 @@ export function DashboardOverview({
       {/* Quick Actions */}
       <Card className="border-neutral-800 bg-neutral-900/50">
         <CardHeader>
-          <CardTitle className="text-white">Quick Actions</CardTitle>
+          <CardTitle className="text-white">{t("quickActions")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,9 +128,9 @@ export function DashboardOverview({
                 <AlertTriangle className="h-5 w-5 text-red-400" />
               </div>
               <div>
-                <p className="font-medium text-white">View Shortages</p>
+                <p className="font-medium text-white">{t("viewShortages")}</p>
                 <p className="text-sm text-neutral-400">
-                  {activeRisks} active risks
+                  {activeRisks} {t("activeRisksCount")}
                 </p>
               </div>
             </button>
@@ -141,8 +143,8 @@ export function DashboardOverview({
                 <Phone className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <p className="font-medium text-white">View All Calls</p>
-                <p className="text-sm text-neutral-400">{calls.length} total</p>
+                <p className="font-medium text-white">{t("viewAllCalls")}</p>
+                <p className="text-sm text-neutral-400">{calls.length} {t("total")}</p>
               </div>
             </button>
 
@@ -154,8 +156,8 @@ export function DashboardOverview({
                 <TrendingUp className="h-5 w-5 text-purple-400" />
               </div>
               <div>
-                <p className="font-medium text-white">View Analytics</p>
-                <p className="text-sm text-neutral-400">Performance metrics</p>
+                <p className="font-medium text-white">{t("viewAnalytics")}</p>
+                <p className="text-sm text-neutral-400">{t("performanceMetrics")}</p>
               </div>
             </button>
           </div>
@@ -166,12 +168,12 @@ export function DashboardOverview({
       <Card className="border-neutral-800 bg-neutral-900/50">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white">Recent Activity</CardTitle>
+            <CardTitle className="text-white">{t("recentActivity")}</CardTitle>
             <button
               onClick={() => onNavigate("calls")}
               className="text-sm text-blue-400 hover:text-blue-300"
             >
-              View all →
+              {t("viewAll")}
             </button>
           </div>
         </CardHeader>

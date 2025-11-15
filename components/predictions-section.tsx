@@ -15,6 +15,7 @@ import { ShortagePrediction } from "@/lib/types";
 import { ShortageDetailsSheet } from "./shortage-details-sheet";
 import { AlertTriangle, Eye } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
+import { useTranslations } from "@/lib/use-translations";
 
 interface PredictionsSectionProps {
   predictions: ShortagePrediction[];
@@ -27,6 +28,7 @@ export function PredictionsSection({
   onTriggerCall,
   onMarkResolved,
 }: PredictionsSectionProps) {
+  const { t } = useTranslations();
   const [selectedShortage, setSelectedShortage] = useState<ShortagePrediction | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -40,19 +42,19 @@ export function PredictionsSection({
     if (riskScore >= 0.7) {
       return (
         <span className="text-red-500/80">
-          {percentage}% High
+          {percentage}% {t("high")}
         </span>
       );
     } else if (riskScore >= 0.4) {
       return (
         <span className="text-amber-500/80">
-          {percentage}% Medium
+          {percentage}% {t("medium")}
         </span>
       );
     } else {
       return (
         <span className="text-green-500/80">
-          {percentage}% Low
+          {percentage}% {t("low")}
         </span>
       );
     }
@@ -63,9 +65,13 @@ export function PredictionsSection({
       pending: "text-yellow-500/80",
       resolved: "text-green-500/80",
     };
+    const labels = {
+      pending: t("pending"),
+      resolved: t("resolved"),
+    };
     return (
       <span className={variants[status as keyof typeof variants]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {labels[status as keyof typeof labels]}
       </span>
     );
   };
@@ -84,7 +90,7 @@ export function PredictionsSection({
           <div className="flex items-center gap-2">
             <AnimatedIcon icon={AlertTriangle} className="h-5 w-5 text-red-400" />
             <CardTitle className="text-xl text-white">
-              Predicted Shortages
+              {t("predictedShortages")}
             </CardTitle>
           </div>
         </CardHeader>
@@ -93,11 +99,11 @@ export function PredictionsSection({
             <Table>
               <TableHeader>
                 <TableRow className="border-neutral-800 hover:bg-transparent">
-                  <TableHead className="text-neutral-400">Product</TableHead>
-                  <TableHead className="text-neutral-400">Customer</TableHead>
-                  <TableHead className="text-neutral-400">Risk</TableHead>
-                  <TableHead className="text-neutral-400">Status</TableHead>
-                  <TableHead className="text-right text-neutral-400">Action</TableHead>
+                  <TableHead className="text-neutral-400">{t("product")}</TableHead>
+                  <TableHead className="text-neutral-400">{t("customer")}</TableHead>
+                  <TableHead className="text-neutral-400">{t("risk")}</TableHead>
+                  <TableHead className="text-neutral-400">{t("status")}</TableHead>
+                  <TableHead className="text-right text-neutral-400">{t("action")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -128,7 +134,7 @@ export function PredictionsSection({
                         className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
                       >
                         <Eye className="mr-1 h-4 w-4" />
-                        Details
+                        {t("details")}
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -9,6 +9,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "@/lib/use-translations";
 
 interface SidebarProps {
   currentView: string;
@@ -16,17 +17,18 @@ interface SidebarProps {
   onExpandChange?: (expanded: boolean) => void;
 }
 
-const menuItems = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "shortages", label: "Shortages", icon: AlertTriangle },
-  { id: "calls", label: "Calls", icon: Phone },
-];
-
 export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isManuallyCollapsed, setIsManuallyCollapsed] = useState(false);
+  const { t } = useTranslations();
 
   const effectiveExpanded = isExpanded && !isManuallyCollapsed;
+
+  const menuItems = [
+    { id: "dashboard", label: t("dashboard"), icon: LayoutDashboard },
+    { id: "shortages", label: t("shortages"), icon: AlertTriangle },
+    { id: "calls", label: t("callsNav"), icon: Phone },
+  ];
 
   useEffect(() => {
     onExpandChange?.(effectiveExpanded);
@@ -131,7 +133,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
                   transition={{ delay: 0.1 }}
                   className="text-sm font-medium"
                 >
-                  Settings
+                  {t("settings")}
                 </motion.span>
               )}
 
@@ -146,7 +148,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
               {/* Tooltip for collapsed state */}
               {!effectiveExpanded && (
                 <div className="absolute left-full ml-2 hidden rounded-md bg-neutral-800 px-2 py-1 text-xs text-white group-hover:block">
-                  Settings
+                  {t("settings")}
                 </div>
               )}
             </button>

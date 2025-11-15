@@ -16,12 +16,14 @@ import { CallDetailsDialog } from "./call-details-dialog";
 import { PhoneIncoming, PhoneOutgoing, MessageSquare } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { format } from "date-fns";
+import { useTranslations } from "@/lib/use-translations";
 
 interface CallsSectionsSeparatedProps {
   calls: CallRecord[];
 }
 
 export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
+  const { t } = useTranslations();
   const [selectedCall, setSelectedCall] = useState<CallRecord | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -37,9 +39,9 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
       in_progress: "text-blue-500/80",
     };
     const labels = {
-      completed: "Completed",
-      failed: "Failed",
-      in_progress: "In Progress",
+      completed: t("completed"),
+      failed: t("failed"),
+      in_progress: t("inProgress"),
     };
     return (
       <span className={variants[status as keyof typeof variants]}>
@@ -56,10 +58,10 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
       no_answer: "text-neutral-400/80",
     };
     const labels = {
-      replacement_accepted: "✓ Accepted",
-      replacement_declined: "✗ Declined",
-      credits_only: "$ Credits",
-      no_answer: "— No Answer",
+      replacement_accepted: t("accepted"),
+      replacement_declined: t("declined"),
+      credits_only: t("creditsOnly"),
+      no_answer: t("noAnswer"),
     };
     return (
       <span className={variants[outcome as keyof typeof variants]}>
@@ -78,7 +80,7 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
           <AnimatedIcon icon={Icon} className="h-5 w-5 text-blue-400" />
           <CardTitle className="text-xl text-white">{title}</CardTitle>
           <span className="ml-auto text-sm text-neutral-400">
-            {callList.length} calls
+            {callList.length} {t("calls")}
           </span>
         </div>
       </CardHeader>
@@ -87,11 +89,11 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
           <Table>
             <TableHeader>
               <TableRow className="border-neutral-800 hover:bg-transparent">
-                <TableHead className="text-neutral-400">Time</TableHead>
-                <TableHead className="text-neutral-400">Customer</TableHead>
-                <TableHead className="text-neutral-400">Status</TableHead>
-                <TableHead className="text-neutral-400">Outcome</TableHead>
-                <TableHead className="text-right text-neutral-400">Action</TableHead>
+                <TableHead className="text-neutral-400">{t("time")}</TableHead>
+                <TableHead className="text-neutral-400">{t("customer")}</TableHead>
+                <TableHead className="text-neutral-400">{t("status")}</TableHead>
+                <TableHead className="text-neutral-400">{t("outcome")}</TableHead>
+                <TableHead className="text-right text-neutral-400">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -116,7 +118,7 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
                       className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
                     >
                       <MessageSquare className="mr-1 h-4 w-4" />
-                      View
+                      {t("view")}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -124,7 +126,7 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
               {callList.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-neutral-500 py-8">
-                    No {title.toLowerCase()} yet
+                    {t("noCallsYet")}
                   </TableCell>
                 </TableRow>
               )}
@@ -138,8 +140,8 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
   return (
     <>
       <div className="space-y-6">
-        <CallTable calls={outboundCalls} title="Outbound Calls" Icon={PhoneOutgoing} />
-        <CallTable calls={inboundCalls} title="Inbound Calls" Icon={PhoneIncoming} />
+        <CallTable calls={outboundCalls} title={t("outboundCalls")} Icon={PhoneOutgoing} />
+        <CallTable calls={inboundCalls} title={t("inboundCalls")} Icon={PhoneIncoming} />
       </div>
 
       <CallDetailsDialog

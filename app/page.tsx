@@ -9,21 +9,16 @@ import { ShortagePrediction, CallRecord } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fi, enUS } from "date-fns/locale";
+import { TranslationsProvider, useTranslations } from "@/lib/use-translations";
 
-export default function Dashboard() {
+function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" | "en") => void }) {
   const [predictions, setPredictions] = useState<ShortagePrediction[]>([]);
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState("dashboard");
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-  const [language, setLanguage] = useState<"fi" | "en">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("language");
-      return (saved === "fi" || saved === "en") ? saved : "fi";
-    }
-    return "fi";
-  });
   const { toast } = useToast();
+  const { t, language } = useTranslations();
 
   // Initial data fetch
   useEffect(() => {
@@ -42,8 +37,8 @@ export default function Dashboard() {
       } catch (error) {
         console.error("Failed to fetch data:", error);
         toast({
-          title: "Error",
-          description: "Failed to load dashboard data",
+          title: t("error"),
+          description: t("failedToLoadData"),
           variant: "destructive",
         });
       } finally {
@@ -100,14 +95,14 @@ export default function Dashboard() {
 
       const shortage = predictions.find((p) => p.id === shortageId);
       toast({
-        title: "AI Call Triggered",
-        description: `Calling ${shortage?.customerName} about ${shortage?.productName}`,
+        title: t("aiCallTriggered"),
+        description: `${t("calling")} ${shortage?.customerName} ${t("about")} ${shortage?.productName}`,
       });
     } catch (error) {
       console.error("Failed to trigger call:", error);
       toast({
-        title: "Error",
-        description: "Failed to trigger AI call",
+        title: t("error"),
+        description: t("failedToTriggerCall"),
         variant: "destructive",
       });
     }
@@ -120,8 +115,8 @@ export default function Dashboard() {
 
     const shortage = predictions.find((p) => p.id === shortageId);
     toast({
-      title: "Marked Resolved",
-      description: `${shortage?.productName} for ${shortage?.customerName}`,
+      title: t("markedResolved"),
+      description: `${shortage?.productName} ${t("about")} ${shortage?.customerName}`,
     });
   };
 
@@ -130,7 +125,7 @@ export default function Dashboard() {
       <div className="flex min-h-screen items-center justify-center bg-neutral-950">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto"></div>
-          <p className="text-neutral-400">Loading dashboard...</p>
+          <p className="text-neutral-400">{t("loading")}</p>
         </div>
       </div>
     );
@@ -150,9 +145,9 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-white">Predicted Shortages</h1>
+              <h1 className="text-3xl font-bold text-white">{t("predictedShortages")}</h1>
               <p className="mt-1 text-neutral-400">
-                Manage and monitor predicted inventory shortages
+                {t("manageShortages")}
               </p>
             </div>
             <PredictionsSection
@@ -166,9 +161,9 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-white">AI Calls</h1>
+              <h1 className="text-3xl font-bold text-white">{t("aiCalls")}</h1>
               <p className="mt-1 text-neutral-400">
-                View all inbound and outbound customer calls
+                {t("viewAllCallsSubtitle")}
               </p>
             </div>
             <CallsSectionsSeparated calls={calls} />
@@ -178,14 +173,14 @@ export default function Dashboard() {
         return (
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-white">Settings</h1>
+              <h1 className="text-3xl font-bold text-white">{t("settings")}</h1>
               <p className="mt-1 text-neutral-400">
-                Configure your dashboard and integrations
+                {t("configureDashboard")}
               </p>
             </div>
             <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-8 text-center">
               <p className="text-neutral-400">
-                Settings panel coming soon...
+                {t("settingsPanelComingSoon")}
               </p>
             </div>
           </div>
@@ -216,12 +211,12 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-full border border-blue-500/50 bg-blue-500/10 px-3 py-1 text-xs text-blue-400">
-                Demo Mode
+                {t("demoMode")}
               </div>
               <button
                 onClick={() => {
                   const newLang = language === "fi" ? "en" : "fi";
-                  setLanguage(newLang);
+                  onLanguageChange(newLang);
                   localStorage.setItem("language", newLang);
                 }}
                 className="rounded-full border border-neutral-700 bg-neutral-800/50 px-3 py-1 text-xs text-neutral-400 transition-all hover:bg-neutral-700/50 hover:text-white cursor-pointer"
@@ -238,5 +233,21 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  const [language, setLanguage] = useState<"fi" | "en">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("language");
+      return (saved === "fi" || saved === "en") ? saved : "fi";
+    }
+    return "fi";
+  });
+
+  return (
+    <TranslationsProvider language={language}>
+      <DashboardContent onLanguageChange={setLanguage} />
+    </TranslationsProvider>
   );
 }
