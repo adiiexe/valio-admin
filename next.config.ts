@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   // If your repo name is not the root, set basePath
-  // basePath: '/valio-admin',
-  // trailingSlash: true,
+  basePath: '/valio-admin',
+  trailingSlash: true,
 };
 
 export default nextConfig;
