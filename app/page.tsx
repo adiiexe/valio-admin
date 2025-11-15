@@ -30,8 +30,8 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         const [predictionsRes, callsRes] = await Promise.all([
-          fetch("/api/predictions"),
-          fetch("/api/calls"),
+          fetch("/api/predictions.json"),
+          fetch("/api/calls.json"),
         ]);
 
         const predictionsData = await predictionsRes.json();
@@ -61,8 +61,8 @@ export default function Dashboard() {
     const pollInterval = setInterval(async () => {
       try {
         const [predictionsRes, callsRes] = await Promise.all([
-          fetch("/api/predictions"),
-          fetch("/api/calls"),
+          fetch("/api/predictions.json"),
+          fetch("/api/calls.json"),
         ]);
 
         const predictionsData = await predictionsRes.json();
@@ -91,24 +91,18 @@ export default function Dashboard() {
 
   const handleTriggerCall = async (shortageId: string) => {
     try {
-      const response = await fetch("/api/trigger-call", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shortageId }),
+      // For static export, simulate the API call
+      // In a real deployment, this would call an external API
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Note: Status remains pending until manually resolved
+      // The call is triggered but status doesn't change automatically
+
+      const shortage = predictions.find((p) => p.id === shortageId);
+      toast({
+        title: "AI Call Triggered",
+        description: `Calling ${shortage?.customerName} about ${shortage?.productName}`,
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Note: Status remains pending until manually resolved
-        // The call is triggered but status doesn't change automatically
-
-        const shortage = predictions.find((p) => p.id === shortageId);
-        toast({
-          title: "AI Call Triggered",
-          description: `Calling ${shortage?.customerName} about ${shortage?.productName}`,
-        });
-      }
     } catch (error) {
       console.error("Failed to trigger call:", error);
       toast({

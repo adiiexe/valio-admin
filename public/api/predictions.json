@@ -1,0 +1,124 @@
+[
+  {
+    "id": "1",
+    "sku": "VAL-MLK-001",
+    "productName": "Valio Kevytmaito 1L",
+    "customerName": "Ravintola Savoy",
+    "riskScore": 0.87,
+    "status": "pending",
+    "orderId": "ORD-2025-1145",
+    "suggestedReplacements": [
+      {
+        "sku": "VAL-MLK-002",
+        "productName": "Valio Rasvaton Maito 1L",
+        "reason": "Same volume, fat-free alternative, same delivery schedule",
+        "tags": ["fat-free", "1L", "same-day-delivery"]
+      },
+      {
+        "sku": "VAL-MLK-003",
+        "productName": "Valio Luomu Kevytmaito 1L",
+        "reason": "Organic option, same fat content, premium quality",
+        "tags": ["organic", "1L", "premium"]
+      },
+      {
+        "sku": "VAL-MLK-004",
+        "productName": "Valio Kevytmaito 2L",
+        "reason": "Larger pack size, better value, same product line",
+        "tags": ["2L", "value-pack", "same-product-line"]
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "sku": "VAL-CRM-005",
+    "productName": "Valio Ruokakerma 5dl",
+    "customerName": "Café Helsinki",
+    "riskScore": 0.65,
+    "status": "pending",
+    "orderId": "ORD-2025-1146",
+    "suggestedReplacements": [
+      {
+        "sku": "VAL-CRM-006",
+        "productName": "Valio Kuohukerma 5dl",
+        "reason": "Whipping cream alternative, suitable for hot beverages",
+        "tags": ["whipping-cream", "5dl", "versatile"]
+      },
+      {
+        "sku": "VAL-CRM-007",
+        "productName": "Valio Ruokakerma 2dl",
+        "reason": "Smaller pack, same product, immediate availability",
+        "tags": ["2dl", "in-stock", "same-product"]
+      }
+    ]
+  },
+  {
+    "id": "3",
+    "sku": "VAL-CHZ-012",
+    "productName": "Valio Emmental viipale 150g",
+    "customerName": "Bistro Kluuvi",
+    "riskScore": 0.43,
+    "status": "pending",
+    "orderId": "ORD-2025-1147",
+    "suggestedReplacements": [
+      {
+        "sku": "VAL-CHZ-013",
+        "productName": "Valio Emmental 200g",
+        "reason": "Larger pack, same cheese, better unit price",
+        "tags": ["200g", "value", "same-cheese"]
+      },
+      {
+        "sku": "VAL-CHZ-014",
+        "productName": "Valio Edamer viipale 150g",
+        "reason": "Similar taste profile, same pack size, melts well",
+        "tags": ["150g", "similar-taste", "melt-friendly"]
+      }
+    ]
+  },
+  {
+    "id": "4",
+    "sku": "VAL-FSH-021",
+    "productName": "Lohifilee 500g",
+    "customerName": "Hotel Kämp Kitchen",
+    "riskScore": 0.91,
+    "status": "pending",
+    "orderId": "ORD-2025-1148",
+    "suggestedReplacements": [
+      {
+        "sku": "VAL-FSH-022",
+        "productName": "Premium Lohifilee 500g",
+        "reason": "Higher grade salmon, same weight, excellent quality",
+        "tags": ["premium", "500g", "high-quality"]
+      },
+      {
+        "sku": "VAL-FSH-023",
+        "productName": "Kirjolohi filee 500g",
+        "reason": "Rainbow trout alternative, similar texture and taste",
+        "tags": ["trout", "500g", "similar-taste"]
+      },
+      {
+        "sku": "VAL-FSH-024",
+        "productName": "Lohifilee 750g",
+        "reason": "Larger portion, same product, can be portioned",
+        "tags": ["750g", "portionable", "same-product"]
+      }
+    ]
+  },
+  {
+    "id": "5",
+    "sku": "VAL-BTR-030",
+    "productName": "Valio Voi 500g",
+    "customerName": "Ravintola Olo",
+    "riskScore": 0.28,
+    "status": "resolved",
+    "orderId": "ORD-2025-1149",
+    "suggestedReplacements": [
+      {
+        "sku": "VAL-BTR-031",
+        "productName": "Valio Voi 250g",
+        "reason": "Half size, same butter, multiple packs available",
+        "tags": ["250g", "multiple-packs", "same-product"]
+      }
+    ]
+  }
+]
+
