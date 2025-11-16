@@ -113,45 +113,6 @@ export function DashboardOverview({
         })}
       </div>
 
-      {/* Quick Actions */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
-        <CardHeader>
-          <CardTitle className="text-white">{t("quickActions")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <button
-              onClick={() => onNavigate("shortages")}
-              className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-800/30 p-4 text-left transition-all hover:border-neutral-700 hover:bg-neutral-800/50"
-            >
-              <div className="rounded-lg bg-red-500/20 p-2">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
-              </div>
-              <div>
-                <p className="font-medium text-white">{t("viewShortages")}</p>
-                <p className="text-sm text-neutral-400">
-                  {activeRisks} {t("activeRisksCount")}
-                </p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => onNavigate("calls")}
-              className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-800/30 p-4 text-left transition-all hover:border-neutral-700 hover:bg-neutral-800/50"
-            >
-              <div className="rounded-lg bg-blue-500/20 p-2">
-                <Phone className="h-5 w-5 text-blue-400" />
-              </div>
-              <div>
-                <p className="font-medium text-white">{t("viewAllCalls")}</p>
-                <p className="text-sm text-neutral-400">{calls.length} {t("total")}</p>
-              </div>
-            </button>
-
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Recent Activity Preview */}
       <Card className="border-neutral-800 bg-neutral-900/50">
         <CardHeader>
