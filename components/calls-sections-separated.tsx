@@ -72,12 +72,14 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
   const inboundCalls = calls.filter(c => c.direction === "inbound");
 
   const CallTable = ({ calls: callList, title, Icon }: { calls: CallRecord[], title: string, Icon: typeof PhoneOutgoing }) => (
-    <Card className="border-neutral-800 bg-neutral-900/50">
+    <Card className="border-border/50 bg-card">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <AnimatedIcon icon={Icon} className="h-5 w-5 text-blue-400" />
-          <CardTitle className="text-xl text-white">{title}</CardTitle>
-          <span className="ml-auto text-sm text-neutral-400">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-blue-500/10 p-2">
+            <AnimatedIcon icon={Icon} className="h-5 w-5 text-blue-500" />
+          </div>
+          <CardTitle className="text-xl text-foreground">{title}</CardTitle>
+          <span className="ml-auto text-sm font-normal text-muted-foreground">
             {callList.length} {t("calls")}
           </span>
         </div>
@@ -86,24 +88,24 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="border-neutral-800 hover:bg-transparent">
-                <TableHead className="text-neutral-400">{t("time")}</TableHead>
-                <TableHead className="text-neutral-400">{t("customer")}</TableHead>
-                <TableHead className="text-neutral-400">{t("status")}</TableHead>
-                <TableHead className="text-neutral-400">{t("outcome")}</TableHead>
-                <TableHead className="text-right text-neutral-400">{t("action")}</TableHead>
+              <TableRow className="border-border/30 hover:bg-transparent dark:border-border">
+                <TableHead className="text-muted-foreground font-medium">{t("time")}</TableHead>
+                <TableHead className="text-muted-foreground font-medium">{t("customer")}</TableHead>
+                <TableHead className="text-muted-foreground font-medium">{t("status")}</TableHead>
+                <TableHead className="text-muted-foreground font-medium">{t("outcome")}</TableHead>
+                <TableHead className="text-right text-muted-foreground font-medium">{t("action")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {callList.map((call) => (
                 <TableRow
                   key={call.id}
-                  className="border-neutral-800 transition-colors hover:bg-neutral-800/50"
+                  className="border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50"
                 >
-                  <TableCell className="text-neutral-400">
+                  <TableCell className="font-normal text-muted-foreground">
                     {format(new Date(call.time), "HH:mm")}
                   </TableCell>
-                  <TableCell className="font-medium text-white">
+                  <TableCell className="font-medium text-foreground">
                     {call.customerName}
                   </TableCell>
                   <TableCell>{getStatusBadge(call.status)}</TableCell>
@@ -113,7 +115,7 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleViewConversation(call)}
-                      className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                      className="text-primary hover:bg-primary/10 hover:text-primary/80 rounded-xl"
                     >
                       <MessageSquare className="mr-1 h-4 w-4" />
                       {t("view")}
@@ -123,7 +125,7 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
               ))}
               {callList.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-neutral-500 py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     {t("noCallsYet")}
                   </TableCell>
                 </TableRow>

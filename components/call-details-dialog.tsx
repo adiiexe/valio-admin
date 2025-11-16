@@ -120,58 +120,58 @@ export function CallDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="border-neutral-800 bg-neutral-950 sm:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-xl text-white">
+      <DialogContent className="border-border/50 bg-background sm:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl shadow-[0_4px_12px_0_rgba(0,0,0,0.08)] dark:shadow-lg">
+        <DialogHeader className="flex-shrink-0 px-8 pt-8">
+          <DialogTitle className="text-xl font-semibold text-foreground">
             {t("callConversation")}
           </DialogTitle>
-          <DialogDescription className="text-neutral-400">
+          <DialogDescription className="text-muted-foreground font-normal">
             {fullCall.summary}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 space-y-4 overflow-y-auto flex-1 pr-2">
+        <div className="mt-6 space-y-6 overflow-y-auto flex-1 px-8 pb-8 pr-4">
           {/* Metadata */}
-          <div className="flex flex-wrap gap-2">
-            <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
-              <Phone className="h-3.5 w-3.5 text-neutral-500" />
-              <span className="text-xs text-neutral-400">
+          <div className="flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 rounded-xl bg-muted/30 px-4 py-2 border border-border/30">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-normal text-muted-foreground">
                 {fullCall.direction === "outbound" ? t("outbound") : t("inbound")}
               </span>
             </div>
-            <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
-              <Globe className="h-3.5 w-3.5 text-neutral-500" />
-              <span className="text-xs text-neutral-400 uppercase">
+            <div className="flex items-center gap-2 rounded-xl bg-muted/30 px-4 py-2 border border-border/30">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-normal text-muted-foreground uppercase">
                 {fullCall.language}
               </span>
             </div>
-            <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
-              <Clock className="h-3.5 w-3.5 text-neutral-500" />
-              <span className="text-xs text-neutral-400">
+            <div className="flex items-center gap-2 rounded-xl bg-muted/30 px-4 py-2 border border-border/30">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-normal text-muted-foreground">
                 {fullCall.status === "in_progress"
                   ? t("inProgress")
                   : `${minutes}m ${seconds}s`}
               </span>
             </div>
-            <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-neutral-500" />
+            <div className="flex items-center gap-2 rounded-xl bg-muted/30 px-4 py-2 border border-border/30">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
               {getOutcomeBadge(fullCall.outcome)}
             </div>
           </div>
 
           {/* Transcript */}
           <div>
-            <h4 className="mb-3 text-sm font-medium text-neutral-300">
+            <h4 className="mb-4 text-sm font-semibold text-foreground">
               {t("transcript")}
             </h4>
-            <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
+            <div className="space-y-4 rounded-xl border border-border/40 bg-muted/20 p-6">
               {isLoadingTranscript ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-                  <span className="ml-2 text-sm text-neutral-400">{t("loading")}</span>
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  <span className="ml-2 text-sm text-muted-foreground">{t("loading")}</span>
                 </div>
               ) : fullCall.transcript.length === 0 ? (
-                <div className="py-8 text-center text-sm text-neutral-500">
+                <div className="py-8 text-center text-sm text-muted-foreground">
                   {t("noTranscriptAvailable")}
                 </div>
               ) : (
@@ -183,16 +183,16 @@ export function CallDetailsDialog({
                   }`}
                 >
                   <div
-                    className={`max-w-[75%] sm:max-w-[65%] rounded-lg px-4 py-2.5 ${
+                    className={`max-w-[75%] sm:max-w-[65%] rounded-xl px-5 py-3 ${
                       turn.speaker === "agent"
-                        ? "bg-blue-500/20 text-blue-100"
-                        : "bg-neutral-800 text-neutral-200"
+                        ? "bg-primary/10 text-foreground border border-primary/20"
+                        : "bg-muted/40 text-foreground border border-border/30"
                     }`}
                   >
-                    <p className="mb-1 text-xs font-medium uppercase opacity-70">
+                    <p className="mb-1.5 text-xs font-medium uppercase opacity-60">
                       {turn.speaker === "agent" ? t("aiAgent") : t("customer")}
                     </p>
-                    <p className="text-sm leading-relaxed">{turn.text}</p>
+                    <p className="text-sm font-normal leading-relaxed">{turn.text}</p>
                   </div>
                 </div>
                 ))
@@ -201,29 +201,29 @@ export function CallDetailsDialog({
           </div>
 
           {/* Audio Player */}
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
-            <p className="mb-2 text-sm font-medium text-neutral-300">
+          <div className="rounded-xl border border-border/40 bg-muted/20 p-6">
+            <p className="mb-4 text-sm font-semibold text-foreground">
               {t("callRecording")}
             </p>
             {isLoadingAudio ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-                <span className="ml-2 text-sm text-neutral-400">{t("loadingAudio")}</span>
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <span className="ml-2 text-sm text-muted-foreground">{t("loadingAudio")}</span>
               </div>
             ) : audioBlobUrl ? (
               <audio controls className="w-full" src={audioBlobUrl}>
                 Your browser does not support the audio element.
               </audio>
             ) : (
-              <div className="flex items-center gap-3 py-4">
-                <div className="rounded-full bg-neutral-800 p-2">
-                  <Phone className="h-4 w-4 text-neutral-400" />
+              <div className="flex items-center gap-4 py-4">
+                <div className="rounded-xl bg-muted/40 p-3 border border-border/30">
+                  <Phone className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-neutral-300">
+                  <p className="text-sm font-medium text-foreground">
                     {t("callRecording")}
                   </p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs font-normal text-muted-foreground">
                     {t("audioNotAvailable")}
                   </p>
                 </div>
@@ -233,8 +233,8 @@ export function CallDetailsDialog({
 
           {/* Photo of Missing Product */}
           {fullCall.photoUrl && (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
-              <p className="mb-2 text-sm font-medium text-neutral-300">
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-6">
+              <p className="mb-4 text-sm font-semibold text-foreground">
                 {t("photoOfMissingProduct")}
               </p>
               <img 
@@ -246,7 +246,7 @@ export function CallDetailsDialog({
           )}
 
           {/* Additional Info */}
-          <div className="border-t border-neutral-800 pt-4 text-xs text-neutral-500">
+          <div className="border-t border-border/30 pt-6 text-xs font-normal text-muted-foreground space-y-1">
             <p>{t("callId")}: {fullCall.id}</p>
             <p>{t("time")}: {format(new Date(fullCall.time), "PPpp")}</p>
             {fullCall.relatedOrderId && <p>{t("relatedOrder")}: {fullCall.relatedOrderId}</p>}

@@ -56,7 +56,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
           duration: 0.35, 
           ease: [0.16, 1, 0.3, 1] // Apple-like smooth easing curve
         }}
-        className="fixed left-0 top-0 z-50 h-screen border-r border-neutral-800 bg-neutral-900/95 backdrop-blur-sm overflow-hidden"
+        className="fixed left-0 top-0 z-50 h-screen border-r border-border/50 bg-sidebar/95 backdrop-blur-sm overflow-hidden dark:border-border dark:bg-sidebar/95"
         onMouseEnter={() => !isManuallyCollapsed && setIsExpanded(true)}
         onMouseLeave={() => !isManuallyCollapsed && setIsExpanded(false)}
       >
@@ -66,7 +66,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
             layout
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className={cn(
-              "flex h-16 items-center border-b border-neutral-800",
+              "flex h-16 items-center border-b border-border/50 dark:border-border",
               effectiveExpanded ? "justify-center px-3" : "justify-center px-0"
             )}
           >
@@ -91,8 +91,8 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
 
           {/* Navigation Menu */}
           <nav className={cn(
-            "flex-1 space-y-1",
-            effectiveExpanded ? "p-3" : "p-2"
+            "flex-1 space-y-2",
+            effectiveExpanded ? "p-4" : "p-3"
           )}>
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -105,11 +105,11 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
                   layout
                   transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                   className={cn(
-                    "group relative flex w-full items-center rounded-lg py-3",
+                    "group relative flex w-full items-center rounded-xl py-3",
                     effectiveExpanded ? "gap-3 px-3" : "justify-center px-0",
                     isActive
-                      ? "bg-blue-500/20 text-blue-400"
-                      : "text-neutral-400 hover:bg-neutral-800/50 hover:text-white"
+                      ? "bg-primary/10 text-primary dark:bg-primary/20"
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground dark:hover:bg-muted/50"
                   )}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
@@ -138,7 +138,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
                   {isActive && effectiveExpanded && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-blue-500"
+                      className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary"
                     />
                   )}
                   {isActive && !effectiveExpanded && (
@@ -149,7 +149,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
 
                   {/* Tooltip for collapsed state */}
                   {!effectiveExpanded && (
-                    <div className="absolute left-full ml-2 hidden rounded-md bg-neutral-800 px-2 py-1 text-xs text-white group-hover:block">
+                    <div className="absolute left-full ml-2 hidden rounded-md bg-popover border border-border px-2 py-1 text-xs text-popover-foreground shadow-lg group-hover:block">
                       {item.label}
                     </div>
                   )}
@@ -160,19 +160,19 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
 
           {/* Footer */}
           <div className={cn(
-            "border-t border-neutral-800",
-            effectiveExpanded ? "p-3" : "p-2"
+            "border-t border-border/50 dark:border-border",
+            effectiveExpanded ? "p-4" : "p-3"
           )}>
             <motion.button
               onClick={() => onViewChange("settings")}
               layout
               transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               className={cn(
-                "group relative flex w-full items-center rounded-lg py-3",
+                "group relative flex w-full items-center rounded-xl py-3",
                 effectiveExpanded ? "gap-3 px-3" : "justify-center px-0",
                 currentView === "settings"
-                  ? "bg-blue-500/20 text-blue-400"
-                  : "text-neutral-400 hover:bg-neutral-800/50 hover:text-white"
+                  ? "bg-primary/10 text-primary dark:bg-primary/20"
+                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground dark:hover:bg-muted/50"
               )}
             >
               <Settings className="h-5 w-5 flex-shrink-0" />
@@ -201,7 +201,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
               {currentView === "settings" && effectiveExpanded && (
                 <motion.div
                   layoutId="activeIndicator"
-                  className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-blue-500"
+                  className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary"
                 />
               )}
               {currentView === "settings" && !effectiveExpanded && (
@@ -212,7 +212,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
 
               {/* Tooltip for collapsed state */}
               {!effectiveExpanded && (
-                <div className="absolute left-full ml-2 hidden rounded-md bg-neutral-800 px-2 py-1 text-xs text-white group-hover:block">
+                <div className="absolute left-full ml-2 hidden rounded-md bg-popover border border-border px-2 py-1 text-xs text-popover-foreground shadow-lg group-hover:block">
                   {t("settings")}
                 </div>
               )}

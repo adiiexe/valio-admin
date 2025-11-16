@@ -214,13 +214,13 @@ function mapElevenLabsListItemToCallRecord(conv: ElevenLabsConversationListItem)
   const customerName = "Customer"; // Will be enhanced when fetching full conversation
 
   // Determine outcome from call summary or status
-  let outcome: "accepted" | "credits" | "incomplete" = "incomplete";
+  let outcome: "replacement_accepted" | "credits_only" | "incomplete" = "incomplete";
   if (conv.status === "done" && conv.call_successful === "success") {
     const summaryText = (conv.transcript_summary || conv.call_summary_title || "").toLowerCase();
     if (summaryText.includes("refund") || summaryText.includes("credit")) {
-      outcome = "credits";
+      outcome = "credits_only";
     } else {
-      outcome = "accepted"; // Default for successful calls
+      outcome = "replacement_accepted"; // Default for successful calls
     }
   } else if (conv.status === "failed" || conv.status === "processing" || conv.status === "initiated") {
     outcome = "incomplete";
@@ -367,9 +367,17 @@ function mapElevenLabsFullToCallRecord(conv: ElevenLabsConversationFull): CallRe
   }
 
   // Determine outcome from transcript content or analysis
-  let outcome: "replacement_accepted" | "replacement_declined" | "credits_only" | "no_answer" = "no_answer";
+  let outcome: "replacement_accepted" | "replacement_declined" | "credits_only" | "incomplete" = "incomplete";
   if (conv.analysis?.call_successful === "success") {
-    outcome = determineOutcome(transcript, conv.status);
+    const determinedOutcome = determineOutcome(transcript, conv.status);
+    // Map the outcome from determineOutcome to the expected format
+    if (determinedOutcome === "accepted") {
+      outcome = "replacement_accepted";
+    } else if (determinedOutcome === "credits") {
+      outcome = "credits_only";
+    } else {
+      outcome = "incomplete";
+    }
   }
 
   // Use summary from API response

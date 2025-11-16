@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { fi, enUS } from "date-fns/locale";
 import { TranslationsProvider, useTranslations } from "@/lib/use-translations";
 import { fetchConversations } from "@/lib/elevenlabs-client";
+import { AnimatedThemeToggleButton } from "@/components/ui/animated-theme-toggle-button";
 
 // Data source URLs
 // Example orders and prediction batch APIs are called directly from the frontend.
@@ -342,10 +343,10 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
           <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mx-auto"></div>
-          <p className="text-neutral-400">{t("loading")}</p>
+          <p className="text-muted-foreground">{t("loading")}</p>
         </div>
       </div>
     );
@@ -377,10 +378,10 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
         );
       case "shortages":
         return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t("predictedShortages")}</h1>
-              <p className="mt-1 text-neutral-400">
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("predictedShortages")}</h1>
+              <p className="text-base font-normal text-muted-foreground">
                 {t("manageShortages")}
               </p>
             </div>
@@ -391,10 +392,10 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
         );
       case "calls":
         return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t("aiCalls")}</h1>
-              <p className="mt-1 text-neutral-400">
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("aiCalls")}</h1>
+              <p className="text-base font-normal text-muted-foreground">
                 {t("viewAllCallsSubtitle")}
               </p>
             </div>
@@ -403,15 +404,15 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
         );
       case "settings":
         return (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t("settings")}</h1>
-              <p className="mt-1 text-neutral-400">
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("settings")}</h1>
+              <p className="text-base font-normal text-muted-foreground">
                 {t("configureDashboard")}
               </p>
             </div>
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/50 p-8 text-center">
-              <p className="text-neutral-400">
+            <div className="rounded-2xl border border-border/50 bg-card p-12 text-center shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] dark:shadow-sm">
+              <p className="text-muted-foreground font-normal">
                 {t("settingsPanelComingSoon")}
               </p>
             </div>
@@ -423,7 +424,7 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
   };
 
   return (
-    <div className="flex min-h-screen bg-neutral-950">
+    <div className="flex min-h-screen bg-background">
       <SidebarNew 
         currentView={currentView} 
         onViewChange={setCurrentView}
@@ -435,27 +436,25 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
       >
         <div className="mx-auto max-w-7xl">
           {/* Top Bar */}
-          <div className="mb-8 flex items-center justify-between">
-            <div className="text-sm text-neutral-400">
+          <div className="mb-10 flex items-center justify-between py-2">
+            <div className="text-sm font-normal text-muted-foreground">
               {format(new Date(), "EEEE, MMMM d, yyyy", {
                 locale: language === "fi" ? fi : enUS,
               })}
             </div>
             <div className="flex items-center gap-3">
-              <div className="rounded-full border border-blue-500/50 bg-blue-500/10 px-3 py-1 text-xs text-blue-400">
-                {t("demoMode")}
-              </div>
+              <AnimatedThemeToggleButton type="horizontal" />
               <button
                 onClick={() => {
                   const newLang = language === "fi" ? "en" : "fi";
                   onLanguageChange(newLang);
                   localStorage.setItem("language", newLang);
                 }}
-                className="rounded-full border border-neutral-700 bg-neutral-800/50 px-3 py-1 text-xs text-neutral-400 transition-all hover:bg-neutral-700/50 hover:text-white cursor-pointer"
+                className="rounded-xl border border-border/50 bg-background px-4 py-2 text-xs font-normal text-muted-foreground transition-all hover:bg-muted/50 hover:text-foreground hover:border-border cursor-pointer shadow-sm"
               >
-                <span className={language === "fi" ? "text-white font-medium" : ""}>FI</span>
+                <span className={language === "fi" ? "text-foreground font-medium" : "font-normal"}>FI</span>
                 {" | "}
-                <span className={language === "en" ? "text-white font-medium" : ""}>EN</span>
+                <span className={language === "en" ? "text-foreground font-medium" : "font-normal"}>EN</span>
               </button>
             </div>
           </div>

@@ -81,11 +81,13 @@ export function PredictionsSection({
 
   return (
     <>
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <AnimatedIcon icon={AlertTriangle} className="h-5 w-5 text-red-400" />
-            <CardTitle className="text-xl text-white">
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-red-500/10 p-2">
+              <AnimatedIcon icon={AlertTriangle} className="h-5 w-5 text-red-500" />
+            </div>
+            <CardTitle className="text-xl text-foreground">
               {t("predictedShortages")}
             </CardTitle>
           </div>
@@ -94,30 +96,30 @@ export function PredictionsSection({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-neutral-800 hover:bg-transparent">
-                  <TableHead className="text-neutral-400">{t("product")}</TableHead>
-                  <TableHead className="text-neutral-400">{t("customer")}</TableHead>
-                  <TableHead className="text-neutral-400">{t("risk")}</TableHead>
-                  <TableHead className="text-neutral-400">{t("status")}</TableHead>
-                  <TableHead className="text-right text-neutral-400">{t("action")}</TableHead>
+                <TableRow className="border-border/30 hover:bg-transparent dark:border-border">
+                  <TableHead className="text-muted-foreground font-medium">{t("product")}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">{t("customer")}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">{t("risk")}</TableHead>
+                  <TableHead className="text-muted-foreground font-medium">{t("status")}</TableHead>
+                  <TableHead className="text-right text-muted-foreground font-medium">{t("action")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedPredictions.map((prediction) => (
                   <TableRow
                     key={prediction.id}
-                    className={`border-neutral-800 transition-colors hover:bg-neutral-800/50 ${
+                    className={`border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50 ${
                       prediction.status === "resolved" ? "opacity-50" : ""
                     } ${
                       prediction.riskScore >= 0.7
-                        ? "border-l-2 border-l-red-500/50"
+                        ? "border-l-2 border-l-red-500/30 dark:border-l-red-500/50"
                         : ""
                     }`}
                   >
-                    <TableCell className="font-medium text-white">
+                    <TableCell className="font-medium text-foreground">
                       {prediction.productName}
                     </TableCell>
-                    <TableCell className="text-neutral-400">
+                    <TableCell className="font-normal text-muted-foreground">
                       {prediction.customerName}
                     </TableCell>
                     <TableCell>{getRiskBadge(prediction.riskScore)}</TableCell>

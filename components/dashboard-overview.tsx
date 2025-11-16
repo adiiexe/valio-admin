@@ -26,7 +26,7 @@ export function DashboardOverview({
   
   const completedCalls = calls.filter((c) => c.status === "completed");
   const acceptedCalls = completedCalls.filter(
-    (c) => c.outcome === "replacement_accepted"
+    (c) => c.outcome === "replacement_accepted" || c.outcome === "accepted"
   );
   const acceptanceRate =
     completedCalls.length > 0
@@ -64,7 +64,7 @@ export function DashboardOverview({
     {
       label: t("resolvedToday"),
       value: predictions.filter((p) => p.status === "resolved").length,
-      change: `3 ${t("pendingAction")}`,
+      change: `${predictions.filter((p) => p.status === "pending").length} ${t("pendingAction")}`,
       icon: TrendingUp,
       color: "text-purple-400",
       bgColor: "bg-purple-500/10",
@@ -73,11 +73,11 @@ export function DashboardOverview({
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-white">{t("welcomeBack")}</h1>
-        <p className="mt-1 text-neutral-400">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("welcomeBack")}</h1>
+        <p className="text-base font-normal text-muted-foreground">
           {t("dashboardSubtitle")}
         </p>
       </div>
@@ -89,22 +89,22 @@ export function DashboardOverview({
           return (
             <Card
               key={stat.label}
-              className="group cursor-pointer border-neutral-800 bg-neutral-900/50 transition-all hover:scale-105 hover:border-neutral-700 hover:bg-neutral-900/70 hover:shadow-2xl"
+              className="group cursor-pointer border-border/50 bg-card transition-all hover:shadow-md hover:border-border/80 dark:hover:shadow-2xl"
               onClick={stat.onClick}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-8">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-neutral-400">
+                  <div className="space-y-3">
+                    <p className="text-sm font-normal text-muted-foreground">
                       {stat.label}
                     </p>
-                    <p className="text-3xl font-bold text-white">
+                    <p className="text-3xl font-semibold tracking-tight text-foreground">
                       {stat.value}
                     </p>
-                    <p className="text-xs text-neutral-500">{stat.change}</p>
+                    <p className="text-xs font-normal text-muted-foreground">{stat.change}</p>
                   </div>
                   <div
-                    className={`rounded-lg ${stat.bgColor} p-3 transition-transform group-hover:scale-110`}
+                    className={`rounded-xl ${stat.bgColor} p-3 transition-all group-hover:scale-105`}
                   >
                     <AnimatedIcon icon={Icon} className={`h-5 w-5 ${stat.color}`} />
                   </div>
@@ -116,39 +116,39 @@ export function DashboardOverview({
       </div>
 
       {/* Recent Activity Preview */}
-      <Card className="border-neutral-800 bg-neutral-900/50">
+      <Card className="border-border/50 bg-card">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-white">{t("recentActivity")}</CardTitle>
+            <CardTitle className="text-foreground">{t("recentActivity")}</CardTitle>
             <button
               onClick={() => onNavigate("calls")}
-              className="text-sm text-blue-400 hover:text-blue-300"
+              className="text-sm font-normal text-primary hover:text-primary/80 transition-colors"
             >
               {t("viewAll")}
             </button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {calls.slice(0, 3).map((call) => (
               <div
                 key={call.id}
                 onClick={() => onViewCall?.(call)}
-                className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-800 bg-neutral-800/30 p-4 transition-all hover:border-neutral-700 hover:bg-neutral-800/50"
+                className="flex cursor-pointer items-center justify-between rounded-xl border border-border/40 bg-muted/20 p-5 transition-all hover:border-border/60 hover:bg-muted/40 hover:shadow-sm"
               >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-blue-500/20 p-2">
-                    <Phone className="h-4 w-4 text-blue-400" />
+                <div className="flex items-center gap-4">
+                  <div className="rounded-xl bg-primary/10 p-2.5">
+                    <Phone className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium text-white">
+                    <p className="font-medium text-foreground">
                       {call.customerName}
                     </p>
-                    <p className="text-sm text-neutral-400">{call.summary}</p>
+                    <p className="text-sm font-normal text-muted-foreground">{call.summary}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-neutral-400">
+                  <p className="text-sm font-normal text-muted-foreground">
                     {new Date(call.time).toLocaleTimeString("en-US", {
                       hour: "2-digit",
                       minute: "2-digit",
