@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShortagePrediction, CallRecord } from "@/lib/types";
-import { AlertTriangle, Phone, CheckCircle2, TrendingUp } from "lucide-react";
+import { AlertTriangle, Phone, CheckCircle2 } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { useTranslations } from "@/lib/use-translations";
 
@@ -33,15 +33,6 @@ export function DashboardOverview({
 
   const stats = [
     {
-      label: t("activeRisks"),
-      value: activeRisks,
-      change: `+2 ${t("fromYesterday")}`,
-      icon: AlertTriangle,
-      color: "text-red-400",
-      bgColor: "bg-red-500/10",
-      onClick: () => onNavigate("shortages"),
-    },
-    {
       label: t("aiCallsToday"),
       value: callsToday,
       change: `${t("lastCall")} 15 min ${t("ago")}`,
@@ -59,15 +50,6 @@ export function DashboardOverview({
       bgColor: "bg-green-500/10",
       onClick: () => onNavigate("calls"),
     },
-    {
-      label: t("resolvedToday"),
-      value: predictions.filter((p) => p.status === "resolved").length,
-      change: `3 ${t("pendingAction")}`,
-      icon: TrendingUp,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10",
-      onClick: () => onNavigate("shortages"),
-    },
   ];
 
   return (
@@ -81,7 +63,7 @@ export function DashboardOverview({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 sm:grid-cols-2">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -119,7 +101,7 @@ export function DashboardOverview({
           <CardTitle className="text-white">{t("quickActions")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             <button
               onClick={() => onNavigate("shortages")}
               className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-800/30 p-4 text-left transition-all hover:border-neutral-700 hover:bg-neutral-800/50"
@@ -148,18 +130,6 @@ export function DashboardOverview({
               </div>
             </button>
 
-            <button
-              onClick={() => onNavigate("settings")}
-              className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-800/30 p-4 text-left transition-all hover:border-neutral-700 hover:bg-neutral-800/50"
-            >
-              <div className="rounded-lg bg-purple-500/20 p-2">
-                <TrendingUp className="h-5 w-5 text-purple-400" />
-              </div>
-              <div>
-                <p className="font-medium text-white">{t("viewAnalytics")}</p>
-                <p className="text-sm text-neutral-400">{t("performanceMetrics")}</p>
-              </div>
-            </button>
           </div>
         </CardContent>
       </Card>

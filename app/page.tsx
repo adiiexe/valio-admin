@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sidebar } from "@/components/sidebar";
+import { SidebarNew } from "@/components/sidebar-new";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { PredictionsSection } from "@/components/predictions-section";
 import { CallsSectionsSeparated } from "@/components/calls-sections-separated";
@@ -381,7 +381,7 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
 
   return (
     <div className="flex min-h-screen bg-neutral-950">
-      <Sidebar 
+      <SidebarNew 
         currentView={currentView} 
         onViewChange={setCurrentView}
         onExpandChange={setIsSidebarExpanded}

@@ -200,11 +200,12 @@ function mapElevenLabsListItemToCallRecord(conv: ElevenLabsConversationListItem)
     conv.message_count > 0;
   
   let status: "completed" | "failed" | "in_progress" = "completed";
-  // Mark as completed if API says "done" OR transcript exists
-  if (conv.status === "done" || hasTranscript) {
-    status = "completed";
-  } else if (conv.status === "processing" || conv.status === "initiated") {
+  // First check if actively processing - always mark as in_progress
+  if (conv.status === "processing" || conv.status === "initiated") {
     status = "in_progress";
+  } else if (conv.status === "done" || hasTranscript) {
+    // Mark as completed if API says "done" OR transcript exists
+    status = "completed";
   } else if (conv.status === "failed") {
     status = "failed";
   }
@@ -349,11 +350,12 @@ function mapElevenLabsFullToCallRecord(conv: ElevenLabsConversationFull): CallRe
     (conv.analysis?.transcript_summary && conv.analysis.transcript_summary.length > 0);
   
   let status: "completed" | "failed" | "in_progress" = "completed";
-  // Mark as completed if API says "done" OR transcript exists
-  if (conv.status === "done" || hasTranscript) {
-    status = "completed";
-  } else if (conv.status === "processing" || conv.status === "initiated") {
+  // First check if actively processing - always mark as in_progress
+  if (conv.status === "processing" || conv.status === "initiated") {
     status = "in_progress";
+  } else if (conv.status === "done" || hasTranscript) {
+    // Mark as completed if API says "done" OR transcript exists
+    status = "completed";
   } else if (conv.status === "failed") {
     status = "failed";
   }

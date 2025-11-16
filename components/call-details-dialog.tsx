@@ -164,7 +164,7 @@ export function CallDetailsDialog({
             <h4 className="mb-3 text-sm font-medium text-neutral-300">
               {t("transcript")}
             </h4>
-            <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 max-h-[50vh] min-h-[300px] overflow-y-auto">
+            <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
               {isLoadingTranscript ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
