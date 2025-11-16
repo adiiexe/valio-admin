@@ -97,10 +97,15 @@ export async function fetchConversations(): Promise<CallRecord[]> {
       ? data
       : data.conversations || [];
 
+    // Filter out known default/test conversation that should not appear in UI
+    const filteredConversations = conversations.filter(
+      (conv) => conv.conversation_id !== "conv_7701ka5g8kg9f7v97kch8qha3q0p"
+    );
+
     // For list endpoint, we only have summary data, need to fetch full details for each
     // For now, map what we have and fetch full details on-demand when viewing
     // Sort by most recent first (newest calls at the top)
-    const mappedCalls = conversations.map(mapElevenLabsListItemToCallRecord);
+    const mappedCalls = filteredConversations.map(mapElevenLabsListItemToCallRecord);
     return mappedCalls.sort((a, b) => {
       const timeA = new Date(a.time).getTime();
       const timeB = new Date(b.time).getTime();
