@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SidebarNew } from "@/components/sidebar-new";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { PredictionsSection } from "@/components/predictions-section";
@@ -23,8 +23,32 @@ const EXAMPLE_DATA_URL =
 const PREDICTION_BATCH_URL =
   process.env.NEXT_PUBLIC_PREDICTION_BATCH_URL ||
   "https://otso.veistera.com/prediction-batch";
+// Optional static fallback for calls (used only if ElevenLabs has no data or fails)
+// Defaults to `public/api/calls.json` to match ELEVENLABS_SETUP.md
 const CALLS_URL =
-  process.env.NEXT_PUBLIC_CALLS_URL || "calls.json";
+  process.env.NEXT_PUBLIC_CALLS_URL || "api/calls.json";
+// Proxy endpoint that calls the n8n webhook server-side to avoid CORS issues
+const OUTBOUND_WEBHOOK_URL =
+  process.env.NEXT_PUBLIC_OUTBOUND_CALLS_WEBHOOK_URL ||
+  "/api/outbound-shortages";
+
+// Shape of outbound resolution entries coming from the n8n webhook
+type OutboundWebhookRow = {
+  // Newer n8n flow uses `product_name`; older one used `Tuote`
+  product_name?: string;
+  Tuote?: string;
+  product_qty?: string;
+  customer_number?: string | number;
+  replaced?: boolean | null;
+  called?: boolean | null;
+  replacedWith?: string | null;
+  replacedWith_qty?: number | null;
+  replacedWith_id?: number | null;
+  product_id?: number | string;
+  id?: number | string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 // Map the prediction API response shape to our ShortagePrediction[] domain model.
 function mapPredictionsResponse(raw: any): ShortagePrediction[] {
@@ -180,9 +204,20 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
   const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
   const { toast } = useToast();
   const { t, language } = useTranslations();
+  const hasLoadedRef = useRef(false);
+
+  const normalize = (value: string | number | null | undefined) =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
 
   // Initial data fetch
   useEffect(() => {
+    if (hasLoadedRef.current) {
+      return;
+    }
+    hasLoadedRef.current = true;
+
     const fetchData = async () => {
       try {
         console.log(
@@ -195,24 +230,10 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
         const predictionsData: ShortagePrediction[] =
           await fetchShortagePredictions();
 
-        // Fetch calls: Try static JSON first, then ElevenLabs if available
+        // Fetch calls: ElevenLabs as primary source, static JSON only as fallback
         let callsData: CallRecord[] = [];
-        
-        // First, try to load static JSON as base (demo data)
-        try {
-          const callsRes = await fetch(CALLS_URL);
-          if (callsRes.ok) {
-            callsData = await callsRes.json();
-            console.log("[Dashboard] Loaded calls from static JSON:", callsData.length, "items");
-          } else {
-            console.warn("[Dashboard] Static JSON returned status:", callsRes.status);
-          }
-        } catch (fallbackError: any) {
-          console.warn("[Dashboard] Failed to load calls from static JSON:", fallbackError?.message || fallbackError);
-          // Continue with empty array, will try ElevenLabs
-        }
-        
-        // Then try ElevenLabs API - if it has calls, use those instead
+
+        // First, try ElevenLabs API
         try {
           const elevenLabsCalls = await fetchConversations();
           console.log(
@@ -220,17 +241,45 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
             elevenLabsCalls.length,
             "items"
           );
-          
-          // If ElevenLabs has calls, use those (they're real calls)
+
           if (elevenLabsCalls.length > 0) {
             callsData = elevenLabsCalls;
-            console.log("[Dashboard] Using ElevenLabs calls instead of static JSON");
+            console.log("[Dashboard] Using ElevenLabs calls as primary source");
           } else {
-            console.log("[Dashboard] ElevenLabs returned no calls, keeping static JSON demo data");
+            console.log(
+              "[Dashboard] ElevenLabs returned no calls; will try static JSON fallback if configured"
+            );
           }
         } catch (elevenLabsError: any) {
-          console.warn("[Dashboard] ElevenLabs API failed, using static JSON:", elevenLabsError?.message || elevenLabsError);
-          // Keep the static JSON data we already loaded (or empty array if that also failed)
+          console.warn(
+            "[Dashboard] ElevenLabs API failed; will try static JSON fallback if configured:",
+            elevenLabsError?.message || elevenLabsError
+          );
+        }
+
+        // If ElevenLabs had no data or failed, optionally fall back to static JSON
+        if ((!Array.isArray(callsData) || callsData.length === 0) && CALLS_URL) {
+          try {
+            const callsRes = await fetch(CALLS_URL);
+            if (callsRes.ok) {
+              callsData = await callsRes.json();
+              console.log(
+                "[Dashboard] Loaded calls from static JSON fallback:",
+                callsData.length,
+                "items"
+              );
+            } else {
+              console.warn(
+                "[Dashboard] Static JSON fallback returned status:",
+                callsRes.status
+              );
+            }
+          } catch (fallbackError: any) {
+            console.warn(
+              "[Dashboard] Failed to load calls from static JSON fallback:",
+              fallbackError?.message || fallbackError
+            );
+          }
         }
 
         setPredictions(predictionsData);
@@ -250,33 +299,123 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
     fetchData();
   }, [toast, t]);
 
+  // Poll outbound resolution webhook periodically to auto-resolve shortages
+  useEffect(() => {
+    if (isLoading) return;
+    if (!OUTBOUND_WEBHOOK_URL) return;
+
+    const pollWebhook = async () => {
+      try {
+        console.log(
+          "[Dashboard] Polling outbound shortages webhook at",
+          new Date().toISOString(),
+          "via",
+          OUTBOUND_WEBHOOK_URL
+        );
+
+        const res = await fetch(OUTBOUND_WEBHOOK_URL);
+        if (!res.ok) {
+          console.warn(
+            "[Dashboard] Outbound webhook returned status:",
+            res.status
+          );
+          return;
+        }
+
+        const json = await res.json();
+        if (!Array.isArray(json)) {
+          console.warn(
+            "[Dashboard] Outbound webhook payload was not an array; got",
+            json
+          );
+          return;
+        }
+
+        const rows = json as OutboundWebhookRow[];
+        console.log(
+          "[Dashboard] Outbound webhook returned rows:",
+          rows.length,
+          rows
+        );
+
+        setPredictions((prev: ShortagePrediction[]): ShortagePrediction[] => {
+          if (!Array.isArray(prev) || prev.length === 0) return prev;
+
+          let changed = false;
+
+          const next: ShortagePrediction[] = prev.map((prediction) => {
+            const match = rows.find((row) => {
+              const sameProductId =
+                normalize(row.product_id) === normalize(prediction.sku);
+
+              const webhookName = row.product_name ?? row.Tuote;
+              const sameProductName =
+                normalize(webhookName) === normalize(prediction.productName);
+
+              return row.replaced === true && (sameProductId || sameProductName);
+            });
+
+            if (match && prediction.status !== "resolved") {
+              changed = true;
+              console.log("[Dashboard] Auto-resolved shortage from webhook", {
+                prediction,
+                match,
+              });
+              return {
+                ...prediction,
+                status: "resolved" as ShortagePrediction["status"],
+              };
+            }
+
+            return prediction;
+          });
+
+          return changed ? next : prev;
+        });
+      } catch (error) {
+        console.error(
+          "[Dashboard] Failed to poll outbound webhook:",
+          (error as any)?.message || error
+        );
+      }
+    };
+
+    // Initial poll, then every 60 seconds
+    void pollWebhook();
+    const intervalId = setInterval(pollWebhook, 60_000);
+
+    return () => clearInterval(intervalId);
+  }, [isLoading]);
+
   // Keep ElevenLabs call logs live using a lightweight polling loop
   useEffect(() => {
     if (isLoading) return; // Don't poll until initial load is complete
 
     const pollInterval = setInterval(async () => {
       try {
-        // Fetch calls: try static JSON first, then ElevenLabs if available
+        // Fetch calls: ElevenLabs as primary source, static JSON only as fallback
         let callsData: CallRecord[] = [];
 
-        // First, try to load static JSON as base (demo data)
-        try {
-          const callsRes = await fetch(CALLS_URL);
-          if (callsRes.ok) {
-            callsData = await callsRes.json();
-          }
-        } catch {
-          // Ignore static JSON errors during polling; keep previous state
-        }
-
-        // Then try ElevenLabs API - if it has calls, use those instead
+        // Try ElevenLabs API first
         try {
           const elevenLabsCalls = await fetchConversations();
           if (elevenLabsCalls.length > 0) {
             callsData = elevenLabsCalls;
           }
         } catch {
-          // Silently keep static JSON on polling errors
+          // Ignore errors here; we'll optionally fall back to static JSON
+        }
+
+        // If ElevenLabs had no data or failed, optionally fall back to static JSON
+        if ((!Array.isArray(callsData) || callsData.length === 0) && CALLS_URL) {
+          try {
+            const callsRes = await fetch(CALLS_URL);
+            if (callsRes.ok) {
+              callsData = await callsRes.json();
+            }
+          } catch {
+            // Ignore static JSON errors during polling; keep previous state
+          }
         }
 
         if (!Array.isArray(callsData) || callsData.length === 0) {
@@ -468,13 +607,17 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
 }
 
 export default function Dashboard() {
-  const [language, setLanguage] = useState<"fi" | "en">(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("language");
-      return (saved === "fi" || saved === "en") ? saved : "fi";
+  // Always start from "fi" on the server to avoid hydration mismatches,
+  // then read the persisted language preference on the client.
+  const [language, setLanguage] = useState<"fi" | "en">("fi");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("language");
+    if (saved === "fi" || saved === "en") {
+      setLanguage(saved);
     }
-    return "fi";
-  });
+  }, []);
 
   return (
     <TranslationsProvider language={language}>
