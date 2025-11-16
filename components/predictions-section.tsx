@@ -19,14 +19,10 @@ import { useTranslations } from "@/lib/use-translations";
 
 interface PredictionsSectionProps {
   predictions: ShortagePrediction[];
-  onTriggerCall: (id: string) => void;
-  onMarkResolved: (id: string) => void;
 }
 
 export function PredictionsSection({
   predictions,
-  onTriggerCall,
-  onMarkResolved,
 }: PredictionsSectionProps) {
   const { t } = useTranslations();
   const [selectedShortage, setSelectedShortage] = useState<ShortagePrediction | null>(null);
@@ -149,8 +145,6 @@ export function PredictionsSection({
         shortage={selectedShortage}
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        onTriggerCall={onTriggerCall}
-        onMarkResolved={onMarkResolved}
       />
     </>
   );

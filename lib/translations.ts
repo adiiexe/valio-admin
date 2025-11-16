@@ -62,6 +62,7 @@ export const translations = {
     triggerAiCall: "Käynnistä AI-puhelu",
     triggering: "Käynnistetään...",
     markResolved: "Merkitse ratkaistuksi",
+    removeShortage: "Poista puute",
     
     // Calls Page
     aiCalls: "AI-puhelut",
@@ -182,6 +183,7 @@ export const translations = {
     triggerAiCall: "Trigger AI Call",
     triggering: "Triggering...",
     markResolved: "Mark Resolved",
+    removeShortage: "Remove Shortage",
     
     // Calls Page
     aiCalls: "AI Calls",

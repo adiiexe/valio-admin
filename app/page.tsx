@@ -5,6 +5,7 @@ import { SidebarNew } from "@/components/sidebar-new";
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { PredictionsSection } from "@/components/predictions-section";
 import { CallsSectionsSeparated } from "@/components/calls-sections-separated";
+import { CallDetailsDialog } from "@/components/call-details-dialog";
 import { ShortagePrediction, CallRecord } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -174,6 +175,8 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState("dashboard");
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const [selectedCall, setSelectedCall] = useState<CallRecord | null>(null);
+  const [isCallDialogOpen, setIsCallDialogOpen] = useState(false);
   const { toast } = useToast();
   const { t, language } = useTranslations();
 
@@ -337,18 +340,6 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
     }
   };
 
-  const handleMarkResolved = (shortageId: string) => {
-    setPredictions((prev) =>
-      prev.map((p) => (p.id === shortageId ? { ...p, status: "resolved" } : p))
-    );
-
-    const shortage = predictions.find((p) => p.id === shortageId);
-    toast({
-      title: t("markedResolved"),
-      description: `${shortage?.productName} ${t("about")} ${shortage?.customerName}`,
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-950">
@@ -364,11 +355,25 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
     switch (currentView) {
       case "dashboard":
         return (
-          <DashboardOverview
-            predictions={predictions}
-            calls={calls}
-            onNavigate={setCurrentView}
-          />
+          <>
+            <DashboardOverview
+              predictions={predictions}
+              calls={calls}
+              onNavigate={setCurrentView}
+              onViewCall={(call: CallRecord) => {
+                setSelectedCall(call);
+                setIsCallDialogOpen(true);
+              }}
+            />
+            <CallDetailsDialog
+              call={selectedCall}
+              isOpen={isCallDialogOpen}
+              onClose={() => {
+                setIsCallDialogOpen(false);
+                setSelectedCall(null);
+              }}
+            />
+          </>
         );
       case "shortages":
         return (
@@ -381,8 +386,6 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
             </div>
             <PredictionsSection
               predictions={predictions}
-              onTriggerCall={handleTriggerCall}
-              onMarkResolved={handleMarkResolved}
             />
           </div>
         );

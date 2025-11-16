@@ -11,34 +11,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShortagePrediction } from "@/lib/types";
-import { Phone, CheckCircle, Package, TrendingUp } from "lucide-react";
+import { CheckCircle, Package, TrendingUp } from "lucide-react";
 import { useTranslations } from "@/lib/use-translations";
 
 interface ShortageDetailsSheetProps {
   shortage: ShortagePrediction | null;
   isOpen: boolean;
   onClose: () => void;
-  onTriggerCall: (id: string) => void;
-  onMarkResolved: (id: string) => void;
 }
 
 export function ShortageDetailsSheet({
   shortage,
   isOpen,
   onClose,
-  onTriggerCall,
-  onMarkResolved,
 }: ShortageDetailsSheetProps) {
   const { t } = useTranslations();
-  const [isTriggering, setIsTriggering] = useState(false);
 
   if (!shortage) return null;
-
-  const handleTriggerCall = async () => {
-    setIsTriggering(true);
-    await onTriggerCall(shortage.id);
-    setIsTriggering(false);
-  };
 
   const riskPercentage = Math.round(shortage.riskScore * 100);
 
@@ -89,7 +78,7 @@ export function ShortageDetailsSheet({
 
           {/* Replacement Suggestions */}
           <div>
-            <h4 className="mb-3 text-sm font-medium text-neutral-300">
+            <h4 className="mb-3 text-center text-sm font-medium text-neutral-300">
               {t("aiReplacementSuggestions")}
             </h4>
             <div className="space-y-3">
@@ -135,20 +124,10 @@ export function ShortageDetailsSheet({
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 border-t border-neutral-800 pt-6">
+          <div className="border-t border-neutral-800 pt-6">
             <Button
-              onClick={handleTriggerCall}
-              disabled={isTriggering || shortage.status !== "pending"}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              <Phone className="mr-2 h-4 w-4" />
-              {isTriggering ? t("triggering") : t("triggerAiCall")}
-            </Button>
-            <Button
-              onClick={() => onMarkResolved(shortage.id)}
               variant="outline"
-              disabled={shortage.status === "resolved"}
-              className="flex-1 border-green-500/50 bg-green-500/10 text-green-400 hover:bg-green-500/20"
+              className="w-full border-green-500/50 bg-green-500/10 text-green-400 hover:bg-green-500/20 cursor-default"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
               {t("markResolved")}

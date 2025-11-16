@@ -10,12 +10,14 @@ interface DashboardOverviewProps {
   predictions: ShortagePrediction[];
   calls: CallRecord[];
   onNavigate: (view: string) => void;
+  onViewCall?: (call: CallRecord) => void;
 }
 
 export function DashboardOverview({
   predictions,
   calls,
   onNavigate,
+  onViewCall,
 }: DashboardOverviewProps) {
   const { t } = useTranslations();
   const activeRisks = predictions.filter((p) => p.status !== "resolved").length;
@@ -131,7 +133,8 @@ export function DashboardOverview({
             {calls.slice(0, 3).map((call) => (
               <div
                 key={call.id}
-                className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-800/30 p-4"
+                onClick={() => onViewCall?.(call)}
+                className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-800 bg-neutral-800/30 p-4 transition-all hover:border-neutral-700 hover:bg-neutral-800/50"
               >
                 <div className="flex items-center gap-3">
                   <div className="rounded-lg bg-blue-500/20 p-2">
