@@ -64,6 +64,15 @@ export const translations = {
     triggering: "Käynnistetään...",
     markResolved: "Merkitse ratkaistuksi",
     removeShortage: "Poista puute",
+    productDetails: "Tuotteen tiedot",
+    eanCode: "EAN koodi",
+    manufacturerName: "Valmistajan nimi",
+    categoryName: "Kategorian nimi",
+    batchSize: "Erän koko",
+    unitPrice: "Yksikköhinta",
+    totalIncludingVat: "Yhteensä (sis. alv)",
+    loadingProductDetails: "Ladataan tuotteen tietoja...",
+    productDetailsNotFound: "Tuotteen tietoja ei löytynyt CSV-tiedostosta",
     
     // Calls Page
     aiCalls: "AI-puhelut",
@@ -207,6 +216,15 @@ export const translations = {
     triggering: "Triggering...",
     markResolved: "Mark Resolved",
     removeShortage: "Remove Shortage",
+    productDetails: "Product Details",
+    eanCode: "EAN Code",
+    manufacturerName: "Manufacturer Name",
+    categoryName: "Category Name",
+    batchSize: "Batch Size",
+    unitPrice: "Unit Price",
+    totalIncludingVat: "Total (incl. VAT)",
+    loadingProductDetails: "Loading product details...",
+    productDetailsNotFound: "Product details not found in CSV",
     
     // Calls Page
     aiCalls: "AI Calls",

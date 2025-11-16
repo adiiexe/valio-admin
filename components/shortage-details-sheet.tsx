@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -8,11 +8,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShortagePrediction } from "@/lib/types";
-import { CheckCircle, Package, TrendingUp } from "lucide-react";
+import { Package, TrendingUp, FileText } from "lucide-react";
 import { useTranslations } from "@/lib/use-translations";
+import { getProductBySKU, ProductCSVData } from "@/lib/products-csv";
+import { translateCategoryName } from "@/lib/category-translations";
 
 interface ShortageDetailsSheetProps {
   shortage: ShortagePrediction | null;
@@ -25,7 +26,26 @@ export function ShortageDetailsSheet({
   isOpen,
   onClose,
 }: ShortageDetailsSheetProps) {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
+  const [productData, setProductData] = useState<ProductCSVData | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState(false);
+
+  useEffect(() => {
+    if (shortage && isOpen) {
+      setLoadingProduct(true);
+      getProductBySKU(shortage.sku)
+        .then((data) => {
+          setProductData(data);
+          setLoadingProduct(false);
+        })
+        .catch(() => {
+          setProductData(null);
+          setLoadingProduct(false);
+        });
+    } else {
+      setProductData(null);
+    }
+  }, [shortage?.sku, isOpen]);
 
   if (!shortage) return null;
 
@@ -107,63 +127,55 @@ export function ShortageDetailsSheet({
             </div>
           </div>
 
-          {/* Replacement Suggestions */}
-          <div>
-            <h4 className="mb-4 text-center text-sm font-semibold text-foreground">
-              {t("aiReplacementSuggestions")}
-            </h4>
-            <div className="space-y-3">
-              {shortage.suggestedReplacements.map((replacement, index) => (
-                <div
-                  key={replacement.sku}
-                  className="group rounded-xl border border-border/40 bg-muted/20 p-5 transition-all hover:border-primary/30 hover:bg-muted/30 hover:shadow-sm"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <p className="font-medium text-foreground">
-                          {replacement.productName}
-                        </p>
-                        {index === 0 && (
-                          <Badge className="bg-primary/10 text-primary border border-primary/20">
-                            {t("recommended")}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-xs font-normal text-muted-foreground">
-                        SKU: <span className="text-foreground">{replacement.sku}</span>
-                      </p>
-                      <p className="mt-2 text-sm font-normal text-muted-foreground">
-                        {replacement.reason}
-                      </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {replacement.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="outline"
-                            className="border-border/50 bg-background text-xs font-normal text-muted-foreground"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
+          {/* Product Details from CSV */}
+          {loadingProduct ? (
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-6">
+              <p className="text-sm text-muted-foreground text-center">{t("loadingProductDetails")}</p>
+            </div>
+          ) : productData ? (
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <h4 className="text-sm font-semibold text-foreground">{t("productDetails")}</h4>
+              </div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs font-normal text-muted-foreground mb-1">{t("eanCode")}</p>
+                    <p className="text-sm font-medium text-foreground">{productData.eanKoodi || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-normal text-muted-foreground mb-1">{t("manufacturerName")}</p>
+                    <p className="text-sm font-medium text-foreground">{productData.valmistajanNimi || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-normal text-muted-foreground mb-1">{t("categoryName")}</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {productData.kategorianNimi 
+                        ? translateCategoryName(productData.kategorianNimi, language)
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-normal text-muted-foreground mb-1">{t("batchSize")}</p>
+                    <p className="text-sm font-medium text-foreground">{productData.eranKoko || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-normal text-muted-foreground mb-1">{t("unitPrice")}</p>
+                    <p className="text-sm font-medium text-foreground">{productData.yksikkohinta || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-normal text-muted-foreground mb-1">{t("totalIncludingVat")}</p>
+                    <p className="text-sm font-medium text-foreground">{productData.yhteensa || "N/A"}</p>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="border-t border-border/30 pt-6">
-            <Button
-              variant="outline"
-              className="w-full border-green-500/50 bg-green-500/10 text-green-600 hover:bg-green-500/20 hover:border-green-500/60 dark:text-green-400 cursor-default rounded-xl"
-            >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              {t("markResolved")}
-            </Button>
-          </div>
+          ) : (
+            <div className="rounded-xl border border-border/40 bg-muted/20 p-6">
+              <p className="text-sm text-muted-foreground text-center">{t("productDetailsNotFound")}</p>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
