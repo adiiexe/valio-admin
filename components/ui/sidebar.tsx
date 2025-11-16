@@ -203,21 +203,6 @@ export const SidebarLink = ({
           </motion.span>
         )}
       </AnimatePresence>
-      
-      {/* Active Indicator */}
-      {isActive && (
-        <motion.div
-          layoutId="activeIndicator"
-          className={cn(
-            "absolute left-0 top-1/2 -translate-y-1/2 rounded-r-full bg-blue-500",
-            open ? "h-8 w-1" : "h-full w-1"
-          )}
-          transition={{
-            duration: 0.3,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-        />
-      )}
     </button>
   );
 };

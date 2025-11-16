@@ -14,6 +14,7 @@ import { Package, TrendingUp, FileText } from "lucide-react";
 import { useTranslations } from "@/lib/use-translations";
 import { getProductBySKU, ProductCSVData } from "@/lib/products-csv";
 import { translateCategoryName } from "@/lib/category-translations";
+import { formatProductName } from "@/lib/format-product-name";
 
 interface ShortageDetailsSheetProps {
   shortage: ShortagePrediction | null;
@@ -98,7 +99,7 @@ export function ShortageDetailsSheet({
                     <Package className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <h3 className="font-semibold text-foreground">
-                    {shortage.productName}
+                    {formatProductName(shortage.productName)}
                   </h3>
                 </div>
                 <div className="mt-4 space-y-1.5">

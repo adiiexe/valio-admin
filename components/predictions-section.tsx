@@ -18,13 +18,16 @@ import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { useTranslations } from "@/lib/use-translations";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { SpotlightTableRow } from "@/components/ui/spotlight-table-row";
+import { formatProductName } from "@/lib/format-product-name";
 
 interface PredictionsSectionProps {
   predictions: ShortagePrediction[];
+  observedShortages?: ShortagePrediction[];
 }
 
 export function PredictionsSection({
   predictions,
+  observedShortages = [],
 }: PredictionsSectionProps) {
   const { t } = useTranslations();
   const [selectedShortage, setSelectedShortage] = useState<ShortagePrediction | null>(null);
@@ -81,74 +84,125 @@ export function PredictionsSection({
     return b.riskScore - a.riskScore;
   });
 
+  // Sort observed shortages: resolved to bottom, then by risk score
+  const sortedObserved = [...observedShortages].sort((a, b) => {
+    if (a.status === "resolved" && b.status !== "resolved") return 1;
+    if (a.status !== "resolved" && b.status === "resolved") return -1;
+    return b.riskScore - a.riskScore;
+  });
+
+  const renderTable = (shortages: ShortagePrediction[], isObserved: boolean = false) => (
+    <Table>
+      <TableHeader>
+        <TableRow className="border-border/30 hover:bg-transparent dark:border-border">
+          <TableHead className="text-muted-foreground font-medium">{t("product")}</TableHead>
+          <TableHead className="text-muted-foreground font-medium">{t("customer")}</TableHead>
+          {isObserved ? (
+            <TableHead className="text-muted-foreground font-medium">{t("replacementProduct")}</TableHead>
+          ) : (
+            <TableHead className="text-muted-foreground font-medium">{t("risk")}</TableHead>
+          )}
+          <TableHead className="text-muted-foreground font-medium">{t("status")}</TableHead>
+          <TableHead className="text-right text-muted-foreground font-medium">{t("action")}</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {shortages.map((shortage) => (
+          <SpotlightTableRow
+            key={shortage.id}
+            spotlightColor={shortage.riskScore >= 0.7 ? "rgba(239, 68, 68, 0.15)" : "rgba(59, 130, 246, 0.15)"}
+            className={`border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50 ${
+              shortage.status === "resolved" ? "opacity-50" : ""
+            }`}
+            onClick={() => handleViewDetails(shortage)}
+          >
+            <TableCell className="font-medium text-foreground">
+              {formatProductName(shortage.productName)}
+            </TableCell>
+            <TableCell className="font-normal text-muted-foreground">
+              {shortage.customerName}
+            </TableCell>
+            {isObserved ? (
+              <TableCell className="font-normal text-foreground">
+                {shortage.replacementProduct ? formatProductName(shortage.replacementProduct) : t("noReplacement")}
+              </TableCell>
+            ) : (
+              <TableCell>{getRiskBadge(shortage.riskScore)}</TableCell>
+            )}
+            <TableCell>{getStatusBadge(shortage.status)}</TableCell>
+            <TableCell className="text-right">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewDetails(shortage);
+                }}
+              >
+                <Eye className="mr-1 h-4 w-4" />
+                {t("details")}
+              </Button>
+            </TableCell>
+          </SpotlightTableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
   return (
     <>
-      <Card className="border-border/50 bg-card">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-xl bg-red-500/10 p-2">
-              <AnimatedIcon icon={AlertTriangle} className="h-5 w-5 text-red-500" />
-            </div>
-            <CardTitle className="text-xl text-foreground">
-              {t("predictedShortages")}
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/30 hover:bg-transparent dark:border-border">
-                  <TableHead className="text-muted-foreground font-medium">{t("product")}</TableHead>
-                  <TableHead className="text-muted-foreground font-medium">{t("customer")}</TableHead>
-                  <TableHead className="text-muted-foreground font-medium">{t("risk")}</TableHead>
-                  <TableHead className="text-muted-foreground font-medium">{t("status")}</TableHead>
-                  <TableHead className="text-right text-muted-foreground font-medium">{t("action")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sortedPredictions.map((prediction) => (
-                  <SpotlightTableRow
-                    key={prediction.id}
-                    spotlightColor={prediction.riskScore >= 0.7 ? "rgba(239, 68, 68, 0.15)" : "rgba(59, 130, 246, 0.15)"}
-                    className={`border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50 ${
-                      prediction.status === "resolved" ? "opacity-50" : ""
-                    } ${
-                      prediction.riskScore >= 0.7
-                        ? "border-l-2 border-l-red-500/30 dark:border-l-red-500/50"
-                        : ""
-                    }`}
-                    onClick={() => handleViewDetails(prediction)}
-                  >
-                    <TableCell className="font-medium text-foreground">
-                      {prediction.productName}
-                    </TableCell>
-                    <TableCell className="font-normal text-muted-foreground">
-                      {prediction.customerName}
-                    </TableCell>
-                    <TableCell>{getRiskBadge(prediction.riskScore)}</TableCell>
-                    <TableCell>{getStatusBadge(prediction.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(prediction);
-                        }}
-                      >
-                        <Eye className="mr-1 h-4 w-4" />
-                        {t("details")}
-                      </Button>
-                    </TableCell>
-                  </SpotlightTableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-8">
+        {/* Predicted Shortages */}
+        <div id="predicted-shortages" className="scroll-mt-8">
+          <Card className="border-border/50 bg-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-orange-500/10 p-2">
+                  <AnimatedIcon icon={AlertTriangle} className="h-5 w-5 text-orange-500" />
+                </div>
+                <CardTitle className="text-xl text-foreground">
+                  {t("predictedShortages")}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                {sortedPredictions.length > 0 ? (
+                  renderTable(sortedPredictions, false)
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">{t("noShortages")}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Observed Shortages */}
+        <div id="observed-shortages" className="scroll-mt-8">
+          <Card className="border-border/50 bg-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-xl bg-red-500/10 p-2">
+                  <AnimatedIcon icon={AlertTriangle} className="h-5 w-5 text-red-500" />
+                </div>
+                <CardTitle className="text-xl text-foreground">
+                  {t("observedShortages")}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                {sortedObserved.length > 0 ? (
+                  renderTable(sortedObserved, true)
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">{t("noShortages")}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <ShortageDetailsSheet
         shortage={selectedShortage}

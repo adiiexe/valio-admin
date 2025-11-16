@@ -130,7 +130,7 @@ export function DashboardOverview({
             <CardTitle className="text-foreground">{t("recentActivity")}</CardTitle>
             <button
               onClick={() => onNavigate("calls")}
-              className="text-sm font-normal text-primary hover:text-primary/80 transition-colors"
+              className="text-sm font-normal text-primary hover:text-green-500 transition-colors"
             >
               {t("viewAll")}
             </button>

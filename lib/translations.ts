@@ -37,6 +37,7 @@ export const translations = {
     
     // Shortages Page
     predictedShortages: "Ennustetut puutteet",
+    observedShortages: "Havaitut puutteet",
     manageShortages: "Hallinnoi ja seuraa ennustettuja varastopuutteita",
     
     // Shortages Table
@@ -51,6 +52,9 @@ export const translations = {
     low: "Matala",
     pending: "Odottaa",
     resolved: "Ratkaistu",
+    replacementProduct: "Korvaustuote",
+    noReplacement: "Ei korvaustuotetta",
+    noShortages: "Ei puutteita",
     
     // Shortage Details
     shortageDetails: "Puutteen yksityiskohdat",
@@ -75,7 +79,7 @@ export const translations = {
     productDetailsNotFound: "Tuotteen tietoja ei löytynyt CSV-tiedostosta",
     
     // Calls Page
-    aiCalls: "AI-puhelut",
+    aiCalls: "Kaikki puhelut",
     viewAllCallsSubtitle: "Näytä kaikki saapuvat ja lähtevät asiakaspuhelut",
     outboundCalls: "Lähtevät puhelut",
     inboundCalls: "Saapuvat puhelut",
@@ -189,6 +193,7 @@ export const translations = {
     
     // Shortages Page
     predictedShortages: "Predicted Shortages",
+    observedShortages: "Observed Shortages",
     manageShortages: "Manage and monitor predicted inventory shortages",
     
     // Shortages Table
@@ -203,6 +208,9 @@ export const translations = {
     low: "Low",
     pending: "Pending",
     resolved: "Resolved",
+    replacementProduct: "Replacement Product",
+    noReplacement: "No Replacement",
+    noShortages: "No Shortages",
     
     // Shortage Details
     shortageDetails: "Shortage Details",
@@ -227,7 +235,7 @@ export const translations = {
     productDetailsNotFound: "Product details not found in CSV",
     
     // Calls Page
-    aiCalls: "AI Calls",
+    aiCalls: "All Calls",
     viewAllCallsSubtitle: "View all inbound and outbound customer calls",
     outboundCalls: "Outbound Calls",
     inboundCalls: "Inbound Calls",

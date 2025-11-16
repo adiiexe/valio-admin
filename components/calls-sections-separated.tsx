@@ -159,8 +159,12 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
   return (
     <>
       <div className="space-y-6">
+        <div id="outbound-calls" className="scroll-mt-8">
         <CallTable calls={outboundCalls} title={t("outboundCalls")} Icon={PhoneOutgoing} />
+        </div>
+        <div id="inbound-calls" className="scroll-mt-8">
         <CallTable calls={inboundCalls} title={t("inboundCalls")} Icon={PhoneIncoming} />
+        </div>
       </div>
 
       <CallDetailsDialog

@@ -7,6 +7,7 @@ import { PredictionsSection } from "@/components/predictions-section";
 import { CallsSectionsSeparated } from "@/components/calls-sections-separated";
 import { CallDetailsDialog } from "@/components/call-details-dialog";
 import { ShortagePrediction, CallRecord } from "@/lib/types";
+import { formatProductName } from "@/lib/format-product-name";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fi, enUS } from "date-fns/locale";
@@ -99,8 +100,9 @@ function mapPredictionsResponse(raw: any): ShortagePrediction[] {
 
       const productCode = item.product_code ?? "UNKNOWN_PRODUCT";
       const productInfo = item.product_info ?? {};
-      const productName =
+      const rawProductName =
         (productInfo && (productInfo["Tuote"] as string)) || productCode;
+      const productName = formatProductName(rawProductName);
       const stockoutProbability =
         typeof item.stockout_probability === "number"
           ? item.stockout_probability
@@ -199,6 +201,7 @@ async function fetchShortagePredictions(): Promise<ShortagePrediction[]> {
 
 function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" | "en") => void }) {
   const [predictions, setPredictions] = useState<ShortagePrediction[]>([]);
+  const [observedShortages, setObservedShortages] = useState<ShortagePrediction[]>([]);
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState("dashboard");
@@ -375,6 +378,38 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
 
           return changed ? next : prev;
         });
+
+        // Extract observed shortages (items that haven't been replaced)
+        const observed: ShortagePrediction[] = rows
+          .filter((row) => row.replaced !== true && (row.called === true || row.called === null))
+          .map((row, index) => {
+            const rawProductName = row.product_name ?? row.Tuote ?? "Unknown Product";
+            const productName = formatProductName(rawProductName);
+            const productId = String(row.product_id ?? row.id ?? `observed-${index}`);
+            const customerNumber = String(row.customer_number ?? "Unknown Customer");
+            const rawReplacementProduct = row.replacedWith ?? null;
+            const replacementProduct = rawReplacementProduct ? formatProductName(rawReplacementProduct) : null;
+
+            return {
+              id: `observed-${productId}-${index}`,
+              sku: String(row.product_id ?? productId),
+              productName: productName,
+              customerName: customerNumber,
+              riskScore: 1.0, // Observed shortages are 100% risk
+              status: "pending" as const,
+              orderId: `OBS-${productId}`,
+              suggestedReplacements: [],
+              type: "observed" as const,
+              replacementProduct: replacementProduct, // Store replacement product name
+            };
+          });
+
+        // Remove duplicates and update observed shortages
+        const uniqueObserved = observed.filter((obs, index, self) =>
+          index === self.findIndex((o) => o.sku === obs.sku && o.customerName === obs.customerName)
+        );
+
+        setObservedShortages(uniqueObserved);
       } catch (error) {
         console.error(
           "[Dashboard] Failed to poll outbound webhook:",
@@ -522,13 +557,14 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
         return (
           <div className="space-y-8">
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("predictedShortages")}</h1>
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("shortages")}</h1>
               <p className="text-base font-normal text-muted-foreground">
                 {t("manageShortages")}
               </p>
             </div>
             <PredictionsSection
               predictions={predictions}
+              observedShortages={observedShortages}
             />
           </div>
         );
@@ -537,7 +573,7 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
           <div className="space-y-8">
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("aiCalls")}</h1>
-              <p className="text-base font-normal text-muted-foreground">
+              <p className="text-base font-normal text-muted-foreground hover:text-green-500 transition-colors cursor-default">
                 {t("viewAllCallsSubtitle")}
               </p>
             </div>
