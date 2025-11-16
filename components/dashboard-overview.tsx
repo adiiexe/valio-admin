@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShortagePrediction, CallRecord } from "@/lib/types";
-import { AlertTriangle, Phone, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, Phone, CheckCircle2, TrendingUp } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { useTranslations } from "@/lib/use-translations";
 
@@ -33,6 +33,15 @@ export function DashboardOverview({
 
   const stats = [
     {
+      label: t("activeRisks"),
+      value: activeRisks,
+      change: `+2 ${t("fromYesterday")}`,
+      icon: AlertTriangle,
+      color: "text-red-400",
+      bgColor: "bg-red-500/10",
+      onClick: () => onNavigate("shortages"),
+    },
+    {
       label: t("aiCallsToday"),
       value: callsToday,
       change: `${t("lastCall")} 15 min ${t("ago")}`,
@@ -50,6 +59,15 @@ export function DashboardOverview({
       bgColor: "bg-green-500/10",
       onClick: () => onNavigate("calls"),
     },
+    {
+      label: t("resolvedToday"),
+      value: predictions.filter((p) => p.status === "resolved").length,
+      change: `3 ${t("pendingAction")}`,
+      icon: TrendingUp,
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/10",
+      onClick: () => onNavigate("shortages"),
+    },
   ];
 
   return (
@@ -63,7 +81,7 @@ export function DashboardOverview({
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
