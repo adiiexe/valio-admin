@@ -13,15 +13,18 @@ import { TranslationsProvider, useTranslations } from "@/lib/use-translations";
 import { fetchConversations } from "@/lib/elevenlabs-client";
 
 // Data source URLs
-// Predictions are fetched from n8n via GET (JSON response).
-// You can override this with NEXT_PUBLIC_PREDICTIONS_URL in .env.local if needed.
-const PREDICTIONS_URL =
-  process.env.NEXT_PUBLIC_PREDICTIONS_URL ||
-  "https://otsobear.app.n8n.cloud/webhook/34f21b26-15b9-4fac-b525-320d4295caf4";
+// Example orders and prediction batch APIs are called directly from the frontend.
+// You can override these with NEXT_PUBLIC_EXAMPLE_DATA_URL and NEXT_PUBLIC_PREDICTION_BATCH_URL in .env.local if needed.
+const EXAMPLE_DATA_URL =
+  process.env.NEXT_PUBLIC_EXAMPLE_DATA_URL ||
+  "https://otso.veistera.com/get-example-data";
+const PREDICTION_BATCH_URL =
+  process.env.NEXT_PUBLIC_PREDICTION_BATCH_URL ||
+  "https://otso.veistera.com/prediction-batch";
 const CALLS_URL =
-  process.env.NEXT_PUBLIC_CALLS_URL || "api/calls.json";
+  process.env.NEXT_PUBLIC_CALLS_URL || "calls.json";
 
-// Map the n8n response shape to our ShortagePrediction[] domain model.
+// Map the prediction API response shape to our ShortagePrediction[] domain model.
 function mapPredictionsResponse(raw: any): ShortagePrediction[] {
   // If it already looks like ShortagePrediction[], return as-is
   if (Array.isArray(raw) && raw.length > 0 && raw[0] && typeof raw[0] === "object") {
@@ -32,7 +35,21 @@ function mapPredictionsResponse(raw: any): ShortagePrediction[] {
   }
 
   const root = Array.isArray(raw) ? raw[0] : raw;
-  const orders = root?.orders;
+
+  // Support multiple common response shapes:
+  // - { orders: [...] }
+  // - { data: { orders: [...] } }
+  // - [{ orders: [...] }]
+  const orders =
+    (root && Array.isArray(root.orders) && root.orders) ||
+    (root &&
+      root.data &&
+      Array.isArray(root.data.orders) &&
+      root.data.orders) ||
+    (raw &&
+      raw.data &&
+      Array.isArray(raw.data.orders) &&
+      raw.data.orders);
   if (!Array.isArray(orders)) return [];
 
   const predictions: ShortagePrediction[] = [];
@@ -70,13 +87,85 @@ function mapPredictionsResponse(raw: any): ShortagePrediction[] {
         riskScore: stockoutProbability,
         status: "pending",
         orderId: orderNumber,
-        // n8n payload doesn't include replacements yet, so leave empty
+        // Prediction payload doesn't include replacements yet, so leave empty
         suggestedReplacements: [],
       });
     }
   }
 
   return predictions;
+}
+
+async function fetchShortagePredictions(): Promise<ShortagePrediction[]> {
+  try {
+    console.log(
+      "[Predictions] Fetching example data from",
+      EXAMPLE_DATA_URL
+    );
+
+    const exampleRes = await fetch(EXAMPLE_DATA_URL);
+    if (!exampleRes.ok) {
+      console.warn(
+        "[Predictions] Example data API returned status:",
+        exampleRes.status
+      );
+      return [];
+    }
+
+    const exampleJson = await exampleRes.json();
+    const orders =
+      exampleJson?.multi_customer_orders?.data?.orders ??
+      exampleJson?.batch_orders_example?.data?.orders ??
+      exampleJson?.cake_bakery_order?.data?.orders;
+
+    if (!Array.isArray(orders) || orders.length === 0) {
+      console.warn(
+        "[Predictions] Example data payload missing orders array (multi_customer_orders / batch_orders_example / cake_bakery_order)"
+      );
+      return [];
+    }
+
+    console.log(
+      "[Predictions] Sending prediction batch request to",
+      PREDICTION_BATCH_URL,
+      "with",
+      orders.length,
+      "orders"
+    );
+
+    const predictionRes = await fetch(PREDICTION_BATCH_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ orders }),
+    });
+
+    if (!predictionRes.ok) {
+      console.warn(
+        "[Predictions] Prediction batch API returned status:",
+        predictionRes.status
+      );
+      return [];
+    }
+
+    const predictionRaw = await predictionRes.json();
+    const mapped = mapPredictionsResponse(predictionRaw);
+
+    console.log(
+      "[Predictions] Received",
+      Array.isArray(mapped) ? mapped.length : "unknown",
+      "shortage predictions"
+    );
+
+    return mapped;
+  } catch (error: any) {
+    console.error(
+      "[Predictions] Failed to fetch predictions:",
+      error?.message || error
+    );
+    return [];
+  }
 }
 
 function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" | "en") => void }) {
@@ -94,27 +183,13 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
       try {
         console.log(
           "[Dashboard] Sending initial predictions request to",
-          PREDICTIONS_URL
+          EXAMPLE_DATA_URL,
+          "and",
+          PREDICTION_BATCH_URL
         );
 
-        let predictionsData: ShortagePrediction[] = [];
-        try {
-          const predictionsRes = await fetch(PREDICTIONS_URL);
-          if (predictionsRes.ok) {
-            const rawPredictions = await predictionsRes.json();
-            predictionsData = mapPredictionsResponse(rawPredictions);
-            console.log(
-              "[Dashboard] Received initial predictions",
-              Array.isArray(predictionsData) ? predictionsData.length : "unknown",
-              "items"
-            );
-          } else {
-            console.warn("[Dashboard] Predictions API returned status:", predictionsRes.status);
-          }
-        } catch (predictionsError: any) {
-          console.error("[Dashboard] Failed to fetch predictions:", predictionsError?.message || predictionsError);
-          // Continue with empty array
-        }
+        const predictionsData: ShortagePrediction[] =
+          await fetchShortagePredictions();
 
         // Fetch calls: Try static JSON first, then ElevenLabs if available
         let callsData: CallRecord[] = [];
@@ -171,87 +246,51 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
     fetchData();
   }, [toast, t]);
 
-  // Real-time polling for updates (every 2.5 seconds)
+  // Keep ElevenLabs call logs live using a lightweight polling loop
   useEffect(() => {
     if (isLoading) return; // Don't poll until initial load is complete
 
     const pollInterval = setInterval(async () => {
       try {
-        console.log(
-          "[Dashboard] Polling predictions from",
-          PREDICTIONS_URL
-        );
-
-        let predictionsData: ShortagePrediction[] = [];
-        try {
-          const predictionsRes = await fetch(PREDICTIONS_URL);
-          if (predictionsRes.ok) {
-            const rawPredictions = await predictionsRes.json();
-            predictionsData = mapPredictionsResponse(rawPredictions);
-          }
-        } catch (predictionsError) {
-          // Silently fail on polling errors to avoid spam
-          console.error("Polling predictions error:", predictionsError);
-        }
-
-        // Fetch calls: Try static JSON first, then ElevenLabs if available
+        // Fetch calls: try static JSON first, then ElevenLabs if available
         let callsData: CallRecord[] = [];
-        
+
         // First, try to load static JSON as base (demo data)
         try {
           const callsRes = await fetch(CALLS_URL);
-          callsData = await callsRes.json();
-        } catch (fallbackError) {
-          // Continue with previous state on fallback failure
-          return;
+          if (callsRes.ok) {
+            callsData = await callsRes.json();
+          }
+        } catch {
+          // Ignore static JSON errors during polling; keep previous state
         }
-        
+
         // Then try ElevenLabs API - if it has calls, use those instead
         try {
           const elevenLabsCalls = await fetchConversations();
-          // If ElevenLabs has calls, use those (they're real calls)
           if (elevenLabsCalls.length > 0) {
             callsData = elevenLabsCalls;
           }
-        } catch (elevenLabsError) {
+        } catch {
           // Silently keep static JSON on polling errors
         }
 
-        console.log(
-          "[Dashboard] Polling response received:",
-          Array.isArray(predictionsData) ? predictionsData.length : "unknown",
-          "prediction items"
-        );
-
-        // Only update state if data has changed (compare JSON strings)
-        setPredictions((prev) => {
-          const prevJson = JSON.stringify(prev);
-          const newJson = JSON.stringify(predictionsData);
-          return prevJson !== newJson ? predictionsData : prev;
-        });
+        if (!Array.isArray(callsData) || callsData.length === 0) {
+          return;
+        }
 
         setCalls((prev) => {
-          // Compare by IDs to detect new calls, not just JSON string comparison
-          const prevIds = new Set(prev.map(c => c.id));
-          const newIds = new Set(callsData.map(c => c.id));
-          
-          // Check if there are new calls or if any existing calls have been updated
-          const hasNewCalls = callsData.some(c => !prevIds.has(c.id));
-          const newCalls = callsData.filter(c => !prevIds.has(c.id));
-          const hasUpdates = prev.some(p => {
-            const updated = callsData.find(c => c.id === p.id);
+          // Compare by IDs to detect new calls or updates
+          const prevIds = new Set(prev.map((c) => c.id));
+          const hasNewCalls = callsData.some((c) => !prevIds.has(c.id));
+          const newCalls = callsData.filter((c) => !prevIds.has(c.id));
+          const hasUpdates = prev.some((p) => {
+            const updated = callsData.find((c) => c.id === p.id);
             return updated && JSON.stringify(p) !== JSON.stringify(updated);
           });
-          
+
           if (hasNewCalls || hasUpdates || prev.length !== callsData.length) {
-            console.log(
-              "[Dashboard] Calls updated:",
-              callsData.length,
-              "total calls",
-              hasNewCalls ? `(${newCalls.length} new call(s) detected)` : ""
-            );
-            
-            // Show toast notification for new calls
+            // Show toast notification for newly detected calls
             if (hasNewCalls && newCalls.length > 0) {
               const latestCall = newCalls[0];
               toast({
@@ -259,16 +298,17 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
                 description: `${t("callFrom")} ${latestCall.customerName} - ${latestCall.summary}`,
               });
             }
-            
+
             return callsData;
           }
+
           return prev;
         });
       } catch (error) {
         // Silently fail on polling errors to avoid spam
-        console.error("Polling error:", error);
+        console.error("[Dashboard] Calls polling error:", error);
       }
-    }, 2500); // Poll every 2.5 seconds
+    }, 10000); // Poll every 10 seconds
 
     return () => clearInterval(pollInterval);
   }, [isLoading, toast, t]);
