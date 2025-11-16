@@ -113,6 +113,44 @@ export async function fetchConversations(): Promise<CallRecord[]> {
 }
 
 /**
+ * Fetch conversation audio as a blob URL (for use in audio elements)
+ * This function fetches the audio with authentication and creates a blob URL
+ */
+export async function fetchConversationAudio(conversationId: string): Promise<string | null> {
+  if (!ELEVENLABS_API_KEY) {
+    console.warn("[ElevenLabs] API key not found, cannot fetch audio");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${ELEVENLABS_API_BASE}/convai/conversations/${conversationId}/audio`, {
+      method: "GET",
+      headers: {
+        "xi-api-key": ELEVENLABS_API_KEY,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(`[ElevenLabs] Audio not available for conversation ${conversationId}`);
+        return null;
+      }
+      throw new Error(`ElevenLabs API error: ${response.status} ${response.statusText}`);
+    }
+
+    // Fetch audio as blob
+    const audioBlob = await response.blob();
+    
+    // Create object URL from blob (this can be used in audio elements)
+    const audioUrl = URL.createObjectURL(audioBlob);
+    return audioUrl;
+  } catch (error) {
+    console.error(`[ElevenLabs] Failed to fetch audio for conversation ${conversationId}:`, error);
+    return null;
+  }
+}
+
+/**
  * Fetch a single conversation by ID
  */
 export async function fetchConversation(conversationId: string): Promise<CallRecord> {
@@ -156,8 +194,16 @@ function mapElevenLabsListItemToCallRecord(conv: ElevenLabsConversationListItem)
   const transcript: TranscriptTurn[] = [];
 
   // Map status
+  // Check if transcript exists (indicates call is done)
+  const hasTranscript = 
+    (conv.transcript_summary && conv.transcript_summary.length > 0) ||
+    conv.message_count > 0;
+  
   let status: "completed" | "failed" | "in_progress" = "completed";
-  if (conv.status === "processing" || conv.status === "initiated") {
+  // Mark as completed if API says "done" OR transcript exists
+  if (conv.status === "done" || hasTranscript) {
+    status = "completed";
+  } else if (conv.status === "processing" || conv.status === "initiated") {
     status = "in_progress";
   } else if (conv.status === "failed") {
     status = "failed";
@@ -297,8 +343,16 @@ function mapElevenLabsFullToCallRecord(conv: ElevenLabsConversationFull): CallRe
   }));
 
   // Map status
+  // Check if transcript exists (indicates call is done)
+  const hasTranscript = 
+    (conv.transcript && conv.transcript.length > 0) ||
+    (conv.analysis?.transcript_summary && conv.analysis.transcript_summary.length > 0);
+  
   let status: "completed" | "failed" | "in_progress" = "completed";
-  if (conv.status === "processing" || conv.status === "initiated") {
+  // Mark as completed if API says "done" OR transcript exists
+  if (conv.status === "done" || hasTranscript) {
+    status = "completed";
+  } else if (conv.status === "processing" || conv.status === "initiated") {
     status = "in_progress";
   } else if (conv.status === "failed") {
     status = "failed";

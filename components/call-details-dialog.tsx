@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import { CallRecord } from "@/lib/types";
 import { Phone, Clock, Globe, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslations } from "@/lib/use-translations";
-import { fetchConversation } from "@/lib/elevenlabs-client";
+import { fetchConversation, fetchConversationAudio } from "@/lib/elevenlabs-client";
 
 interface CallDetailsDialogProps {
   call: CallRecord | null;
@@ -28,20 +28,55 @@ export function CallDetailsDialog({
   const { t } = useTranslations();
   const [fullCall, setFullCall] = useState<CallRecord | null>(call);
   const [isLoadingTranscript, setIsLoadingTranscript] = useState(false);
+  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const audioBlobUrlRef = useRef<string | null>(null);
 
-  // Fetch full conversation details when dialog opens (always fetch to get latest transcript)
+  // Fetch full conversation details and audio when dialog opens
   useEffect(() => {
     if (isOpen && call) {
       setIsLoadingTranscript(true);
+      setIsLoadingAudio(true);
+      
       // Always fetch full conversation to ensure we have the latest transcript
       fetchConversation(call.id)
         .then((fullConversation) => {
           setFullCall(fullConversation);
+          
+          // Check if audio is available and fetch it
+          // Audio is available if: status is completed, or has_audio flag is true, or audioUrl exists
+          const shouldFetchAudio = 
+            fullConversation.status === "completed" || 
+            fullConversation.audioUrl !== undefined;
+          
+          if (shouldFetchAudio) {
+            console.log("[CallDetailsDialog] Fetching audio for conversation:", call.id);
+            fetchConversationAudio(call.id)
+              .then((blobUrl) => {
+                // Revoke previous blob URL if exists
+                if (audioBlobUrlRef.current) {
+                  URL.revokeObjectURL(audioBlobUrlRef.current);
+                }
+                audioBlobUrlRef.current = blobUrl;
+                setAudioBlobUrl(blobUrl);
+                console.log("[CallDetailsDialog] Audio loaded successfully:", blobUrl ? "yes" : "no");
+              })
+              .catch((error) => {
+                console.warn("[CallDetailsDialog] Failed to fetch audio:", error);
+              })
+              .finally(() => {
+                setIsLoadingAudio(false);
+              });
+          } else {
+            console.log("[CallDetailsDialog] Audio not available for this call");
+            setIsLoadingAudio(false);
+          }
         })
         .catch((error) => {
           console.error("[CallDetailsDialog] Failed to fetch full conversation:", error);
           // If fetch fails, use the call data we have (might have partial transcript)
           setFullCall(call);
+          setIsLoadingAudio(false);
         })
         .finally(() => {
           setIsLoadingTranscript(false);
@@ -49,6 +84,15 @@ export function CallDetailsDialog({
     } else if (call) {
       setFullCall(call);
     }
+    
+    // Cleanup: revoke blob URL when dialog closes or component unmounts
+    return () => {
+      if (audioBlobUrlRef.current) {
+        URL.revokeObjectURL(audioBlobUrlRef.current);
+        audioBlobUrlRef.current = null;
+        setAudioBlobUrl(null);
+      }
+    };
   }, [isOpen, call]);
 
   if (!call || !fullCall) return null;
@@ -76,8 +120,8 @@ export function CallDetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="border-neutral-800 bg-neutral-950 sm:max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="border-neutral-800 bg-neutral-950 sm:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl text-white">
             {t("callConversation")}
           </DialogTitle>
@@ -86,7 +130,7 @@ export function CallDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 space-y-6">
+        <div className="mt-4 space-y-4 overflow-y-auto flex-1 pr-2">
           {/* Metadata */}
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center gap-1 rounded-md bg-neutral-900/50 px-3 py-1.5">
@@ -120,7 +164,7 @@ export function CallDetailsDialog({
             <h4 className="mb-3 text-sm font-medium text-neutral-300">
               {t("transcript")}
             </h4>
-            <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 max-h-96 overflow-y-auto">
+            <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900/30 p-4 max-h-[50vh] min-h-[300px] overflow-y-auto">
               {isLoadingTranscript ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
@@ -139,7 +183,7 @@ export function CallDetailsDialog({
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg px-4 py-2.5 ${
+                    className={`max-w-[75%] sm:max-w-[65%] rounded-lg px-4 py-2.5 ${
                       turn.speaker === "agent"
                         ? "bg-blue-500/20 text-blue-100"
                         : "bg-neutral-800 text-neutral-200"
@@ -157,19 +201,21 @@ export function CallDetailsDialog({
           </div>
 
           {/* Audio Player */}
-          {fullCall.audioUrl ? (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
-              <p className="mb-2 text-sm font-medium text-neutral-300">
-                {t("callRecording")}
-              </p>
-              <audio controls className="w-full">
-                <source src={fullCall.audioUrl} type="audio/mpeg" />
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
+            <p className="mb-2 text-sm font-medium text-neutral-300">
+              {t("callRecording")}
+            </p>
+            {isLoadingAudio ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                <span className="ml-2 text-sm text-neutral-400">{t("loadingAudio")}</span>
+              </div>
+            ) : audioBlobUrl ? (
+              <audio controls className="w-full" src={audioBlobUrl}>
                 Your browser does not support the audio element.
               </audio>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-neutral-800 bg-neutral-900/30 p-4">
-              <div className="flex items-center gap-3">
+            ) : (
+              <div className="flex items-center gap-3 py-4">
                 <div className="rounded-full bg-neutral-800 p-2">
                   <Phone className="h-4 w-4 text-neutral-400" />
                 </div>
@@ -178,12 +224,12 @@ export function CallDetailsDialog({
                     {t("callRecording")}
                   </p>
                   <p className="text-xs text-neutral-500">
-                    {t("willBeAvailable")}
+                    {t("audioNotAvailable")}
                   </p>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Photo of Missing Product */}
           {fullCall.photoUrl && (
