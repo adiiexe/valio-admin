@@ -85,6 +85,8 @@ export const translations = {
     accepted: "✓ Hyväksytty",
     credits: "$ Luotto",
     incomplete: "— Keskeneräinen",
+    replacementDeclined: "✗ Hylätty",
+    noAnswer: "— Ei vastausta",
     
     // Call Details
     callConversation: "Puhelun keskustelu",
@@ -226,6 +228,8 @@ export const translations = {
     accepted: "✓ Accepted",
     credits: "$ Credits",
     incomplete: "— Incomplete",
+    replacementDeclined: "✗ Declined",
+    noAnswer: "— No Answer",
     
     // Call Details
     callConversation: "Call Conversation",

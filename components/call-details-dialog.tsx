@@ -98,19 +98,31 @@ export function CallDetailsDialog({
   if (!call || !fullCall) return null;
 
   const getOutcomeBadge = (outcome: string) => {
-    const variants = {
+    const variants: Record<string, string> = {
       accepted: "text-green-500/80",
+      replacement_accepted: "text-green-500/80",
       credits: "text-blue-500/80",
+      credits_only: "text-blue-500/80",
       incomplete: "text-neutral-400/80",
+      replacement_declined: "text-red-500/80",
+      no_answer: "text-yellow-500/80",
     };
-    const labels = {
+    const labels: Record<string, string> = {
       accepted: t("accepted"),
+      replacement_accepted: t("accepted"),
       credits: t("credits"),
+      credits_only: t("credits"),
       incomplete: t("incomplete"),
+      replacement_declined: t("replacementDeclined"),
+      no_answer: t("noAnswer"),
     };
+    
+    const variant = variants[outcome] || "text-muted-foreground/80";
+    const label = labels[outcome] || outcome || "—";
+    
     return (
-      <span className={`text-xs ${variants[outcome as keyof typeof variants]}`}>
-        {labels[outcome as keyof typeof labels]}
+      <span className={`text-xs ${variant}`}>
+        {label}
       </span>
     );
   };

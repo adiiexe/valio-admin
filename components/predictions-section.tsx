@@ -16,6 +16,8 @@ import { ShortageDetailsSheet } from "./shortage-details-sheet";
 import { AlertTriangle, Eye } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { useTranslations } from "@/lib/use-translations";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { SpotlightTableRow } from "@/components/ui/spotlight-table-row";
 
 interface PredictionsSectionProps {
   predictions: ShortagePrediction[];
@@ -106,8 +108,9 @@ export function PredictionsSection({
               </TableHeader>
               <TableBody>
                 {sortedPredictions.map((prediction) => (
-                  <TableRow
+                  <SpotlightTableRow
                     key={prediction.id}
+                    spotlightColor={prediction.riskScore >= 0.7 ? "rgba(239, 68, 68, 0.15)" : "rgba(59, 130, 246, 0.15)"}
                     className={`border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50 ${
                       prediction.status === "resolved" ? "opacity-50" : ""
                     } ${
@@ -115,6 +118,7 @@ export function PredictionsSection({
                         ? "border-l-2 border-l-red-500/30 dark:border-l-red-500/50"
                         : ""
                     }`}
+                    onClick={() => handleViewDetails(prediction)}
                   >
                     <TableCell className="font-medium text-foreground">
                       {prediction.productName}
@@ -128,14 +132,17 @@ export function PredictionsSection({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleViewDetails(prediction)}
                         className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(prediction);
+                        }}
                       >
                         <Eye className="mr-1 h-4 w-4" />
                         {t("details")}
                       </Button>
                     </TableCell>
-                  </TableRow>
+                  </SpotlightTableRow>
                 ))}
               </TableBody>
             </Table>

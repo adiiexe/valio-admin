@@ -50,21 +50,31 @@ export function CallsSection({ calls }: CallsSectionProps) {
   };
 
   const getOutcomeBadge = (outcome: string) => {
-    const variants = {
+    const variants: Record<string, string> = {
+      accepted: "bg-green-500/20 text-green-400",
       replacement_accepted: "bg-green-500/20 text-green-400",
-      replacement_declined: "bg-red-500/20 text-red-400",
+      credits: "bg-blue-500/20 text-blue-400",
       credits_only: "bg-blue-500/20 text-blue-400",
-      no_answer: "bg-neutral-500/20 text-neutral-400",
+      incomplete: "bg-neutral-500/20 text-neutral-400",
+      replacement_declined: "bg-red-500/20 text-red-400",
+      no_answer: "bg-yellow-500/20 text-yellow-400",
     };
-    const labels = {
+    const labels: Record<string, string> = {
+      accepted: "✓ Accepted",
       replacement_accepted: "✓ Accepted",
-      replacement_declined: "✗ Declined",
+      credits: "$ Credits",
       credits_only: "$ Credits",
+      incomplete: "— Incomplete",
+      replacement_declined: "✗ Declined",
       no_answer: "— No Answer",
     };
+    
+    const variant = variants[outcome] || "bg-neutral-500/20 text-neutral-400";
+    const label = labels[outcome] || outcome || "—";
+    
     return (
-      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs ${variants[outcome as keyof typeof variants]}`}>
-        {labels[outcome as keyof typeof labels]}
+      <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs ${variant}`}>
+        {label}
       </span>
     );
   };

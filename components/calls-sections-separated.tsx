@@ -17,6 +17,8 @@ import { PhoneIncoming, PhoneOutgoing, MessageSquare } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { format } from "date-fns";
 import { useTranslations } from "@/lib/use-translations";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { SpotlightTableRow } from "@/components/ui/spotlight-table-row";
 
 interface CallsSectionsSeparatedProps {
   calls: CallRecord[];
@@ -51,19 +53,31 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
   };
 
   const getOutcomeBadge = (outcome: string) => {
-    const variants = {
+    const variants: Record<string, string> = {
       accepted: "text-green-500/80",
+      replacement_accepted: "text-green-500/80",
       credits: "text-blue-500/80",
+      credits_only: "text-blue-500/80",
       incomplete: "text-neutral-400/80",
+      replacement_declined: "text-red-500/80",
+      no_answer: "text-yellow-500/80",
     };
-    const labels = {
+    const labels: Record<string, string> = {
       accepted: t("accepted"),
+      replacement_accepted: t("accepted"),
       credits: t("credits"),
+      credits_only: t("credits"),
       incomplete: t("incomplete"),
+      replacement_declined: t("replacementDeclined"),
+      no_answer: t("noAnswer"),
     };
+    
+    const variant = variants[outcome] || "text-muted-foreground/80";
+    const label = labels[outcome] || outcome || "—";
+    
     return (
-      <span className={variants[outcome as keyof typeof variants]}>
-        {labels[outcome as keyof typeof labels]}
+      <span className={variant}>
+        {label}
       </span>
     );
   };
@@ -98,9 +112,11 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
             </TableHeader>
             <TableBody>
               {callList.map((call) => (
-                <TableRow
+                <SpotlightTableRow
                   key={call.id}
+                  spotlightColor="rgba(59, 130, 246, 0.15)"
                   className="border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50"
+                  onClick={() => handleViewConversation(call)}
                 >
                   <TableCell className="font-normal text-muted-foreground">
                     {format(new Date(call.time), "HH:mm")}
@@ -114,14 +130,17 @@ export function CallsSectionsSeparated({ calls }: CallsSectionsSeparatedProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleViewConversation(call)}
                       className="text-primary hover:bg-primary/10 hover:text-primary/80 rounded-xl"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewConversation(call);
+                      }}
                     >
                       <MessageSquare className="mr-1 h-4 w-4" />
                       {t("view")}
                     </Button>
                   </TableCell>
-                </TableRow>
+                </SpotlightTableRow>
               ))}
               {callList.length === 0 && (
                 <TableRow>

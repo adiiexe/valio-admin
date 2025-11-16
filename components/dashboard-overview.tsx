@@ -5,6 +5,7 @@ import { ShortagePrediction, CallRecord } from "@/lib/types";
 import { AlertTriangle, Phone, CheckCircle2, TrendingUp } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { useTranslations } from "@/lib/use-translations";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 interface DashboardOverviewProps {
   predictions: ShortagePrediction[];
@@ -41,6 +42,7 @@ export function DashboardOverview({
       icon: AlertTriangle,
       color: "text-red-400",
       bgColor: "bg-red-500/10",
+      spotlightColor: "rgba(239, 68, 68, 0.15)", // Red glow
       onClick: () => onNavigate("shortages"),
     },
     {
@@ -50,6 +52,7 @@ export function DashboardOverview({
       icon: Phone,
       color: "text-blue-400",
       bgColor: "bg-blue-500/10",
+      spotlightColor: "rgba(59, 130, 246, 0.15)", // Blue glow
       onClick: () => onNavigate("calls"),
     },
     {
@@ -59,6 +62,7 @@ export function DashboardOverview({
       icon: CheckCircle2,
       color: "text-green-400",
       bgColor: "bg-green-500/10",
+      spotlightColor: "rgba(34, 197, 94, 0.15)", // Green glow
       onClick: () => onNavigate("calls"),
     },
     {
@@ -68,6 +72,7 @@ export function DashboardOverview({
       icon: TrendingUp,
       color: "text-purple-400",
       bgColor: "bg-purple-500/10",
+      spotlightColor: "rgba(168, 85, 247, 0.15)", // Purple glow
       onClick: () => onNavigate("shortages"),
     },
   ];
@@ -87,30 +92,33 @@ export function DashboardOverview({
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card
+            <SpotlightCard
               key={stat.label}
-              className="group cursor-pointer border-border/50 bg-card transition-all hover:shadow-md hover:border-border/80 dark:hover:shadow-2xl"
+              spotlightColor={stat.spotlightColor}
+              className="cursor-pointer"
               onClick={stat.onClick}
             >
-              <CardContent className="p-8">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-3">
-                    <p className="text-sm font-normal text-muted-foreground">
-                      {stat.label}
-                    </p>
-                    <p className="text-3xl font-semibold tracking-tight text-foreground">
-                      {stat.value}
-                    </p>
-                    <p className="text-xs font-normal text-muted-foreground">{stat.change}</p>
+              <Card className="group border-border/50 bg-card transition-all hover:shadow-md hover:border-border/80 dark:hover:shadow-2xl h-full">
+                <CardContent className="p-8">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-3">
+                      <p className="text-sm font-normal text-muted-foreground">
+                        {stat.label}
+                      </p>
+                      <p className="text-3xl font-semibold tracking-tight text-foreground">
+                        {stat.value}
+                      </p>
+                      <p className="text-xs font-normal text-muted-foreground">{stat.change}</p>
+                    </div>
+                    <div
+                      className={`rounded-xl ${stat.bgColor} p-3 transition-all group-hover:scale-105`}
+                    >
+                      <AnimatedIcon icon={Icon} className={`h-5 w-5 ${stat.color}`} />
+                    </div>
                   </div>
-                  <div
-                    className={`rounded-xl ${stat.bgColor} p-3 transition-all group-hover:scale-105`}
-                  >
-                    <AnimatedIcon icon={Icon} className={`h-5 w-5 ${stat.color}`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </SpotlightCard>
           );
         })}
       </div>
@@ -131,11 +139,15 @@ export function DashboardOverview({
         <CardContent>
           <div className="space-y-3">
             {calls.slice(0, 3).map((call) => (
-              <div
+              <SpotlightCard
                 key={call.id}
+                spotlightColor="rgba(59, 130, 246, 0.15)"
+                className="cursor-pointer rounded-xl"
                 onClick={() => onViewCall?.(call)}
-                className="flex cursor-pointer items-center justify-between rounded-xl border border-border/40 bg-muted/20 p-5 transition-all hover:border-border/60 hover:bg-muted/40 hover:shadow-sm"
               >
+                <div
+                  className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/20 p-5 transition-all hover:border-border/60 hover:bg-muted/40 hover:shadow-sm"
+                >
                 <div className="flex items-center gap-4">
                   <div className="rounded-xl bg-primary/10 p-2.5">
                     <Phone className="h-4 w-4 text-primary" />
@@ -155,7 +167,8 @@ export function DashboardOverview({
                     })}
                   </p>
                 </div>
-              </div>
+                </div>
+              </SpotlightCard>
             ))}
           </div>
         </CardContent>

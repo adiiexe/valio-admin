@@ -15,6 +15,7 @@ import { fetchConversations } from "@/lib/elevenlabs-client";
 import { AnimatedThemeToggleButton } from "@/components/ui/animated-theme-toggle-button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Info, Database, Mail, TrendingUp, Phone, CheckCircle2, BarChart3, ArrowRight } from "lucide-react";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 
 // Data source URLs
 // Example orders and prediction batch APIs are called directly from the frontend.
@@ -559,133 +560,145 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
               
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {/* Step 1 */}
-                <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-red-500/10 p-3 border border-red-500/20">
-                        <TrendingUp className="h-6 w-6 text-red-500" />
+                <SpotlightCard spotlightColor="rgba(239, 68, 68, 0.15)" className="rounded-2xl">
+                  <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all h-full">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-red-500/10 p-3 border border-red-500/20">
+                          <TrendingUp className="h-6 w-6 text-red-500" />
+                        </div>
+                        <CardTitle className="text-lg text-foreground">{t("step1Title")}</CardTitle>
                       </div>
-                      <CardTitle className="text-lg text-foreground">{t("step1Title")}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm font-normal text-muted-foreground leading-relaxed">
-                      {t("step1Description")}
-                    </p>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm font-normal text-muted-foreground leading-relaxed">
+                        {t("step1Description")}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </SpotlightCard>
 
                 {/* Step 2 */}
-                <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-blue-500/10 p-3 border border-blue-500/20">
-                        <Phone className="h-6 w-6 text-blue-500" />
+                <SpotlightCard spotlightColor="rgba(59, 130, 246, 0.15)" className="rounded-2xl">
+                  <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all h-full">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-blue-500/10 p-3 border border-blue-500/20">
+                          <Phone className="h-6 w-6 text-blue-500" />
+                        </div>
+                        <CardTitle className="text-lg text-foreground">{t("step2Title")}</CardTitle>
                       </div>
-                      <CardTitle className="text-lg text-foreground">{t("step2Title")}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm font-normal text-muted-foreground leading-relaxed">
-                      {t("step2Description")}
-                    </p>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm font-normal text-muted-foreground leading-relaxed">
+                        {t("step2Description")}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </SpotlightCard>
 
                 {/* Step 3 */}
-                <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-green-500/10 p-3 border border-green-500/20">
-                        <CheckCircle2 className="h-6 w-6 text-green-500" />
+                <SpotlightCard spotlightColor="rgba(34, 197, 94, 0.15)" className="rounded-2xl">
+                  <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all h-full">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-green-500/10 p-3 border border-green-500/20">
+                          <CheckCircle2 className="h-6 w-6 text-green-500" />
+                        </div>
+                        <CardTitle className="text-lg text-foreground">{t("step3Title")}</CardTitle>
                       </div>
-                      <CardTitle className="text-lg text-foreground">{t("step3Title")}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm font-normal text-muted-foreground leading-relaxed">
-                      {t("step3Description")}
-                    </p>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm font-normal text-muted-foreground leading-relaxed">
+                        {t("step3Description")}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </SpotlightCard>
 
                 {/* Step 4 */}
-                <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-xl bg-purple-500/10 p-3 border border-purple-500/20">
-                        <BarChart3 className="h-6 w-6 text-purple-500" />
+                <SpotlightCard spotlightColor="rgba(168, 85, 247, 0.15)" className="rounded-2xl">
+                  <Card className="border-border/50 bg-card relative overflow-hidden group hover:shadow-md transition-all h-full">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-full" />
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-purple-500/10 p-3 border border-purple-500/20">
+                          <BarChart3 className="h-6 w-6 text-purple-500" />
+                        </div>
+                        <CardTitle className="text-lg text-foreground">{t("step4Title")}</CardTitle>
                       </div>
-                      <CardTitle className="text-lg text-foreground">{t("step4Title")}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm font-normal text-muted-foreground leading-relaxed">
-                      {t("step4Description")}
-                    </p>
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm font-normal text-muted-foreground leading-relaxed">
+                        {t("step4Description")}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </SpotlightCard>
               </div>
             </div>
 
             {/* Additional Info Cards */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {/* Data Sources & Technologies Card */}
-              <Card className="border-border/50 bg-card">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-blue-500/10 p-2 border border-blue-500/20">
-                      <Database className="h-5 w-5 text-blue-500" />
+              <SpotlightCard spotlightColor="rgba(59, 130, 246, 0.15)" className="rounded-2xl">
+                <Card className="border-border/50 bg-card h-full">
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-blue-500/10 p-2 border border-blue-500/20">
+                        <Database className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <CardTitle className="text-foreground">{t("dataSources")}</CardTitle>
                     </div>
-                    <CardTitle className="text-foreground">{t("dataSources")}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                      {t("dataSources")}
-                    </p>
-                    <p className="text-sm font-normal text-foreground leading-relaxed">
-                      {t("dataSourcesList")}
-                    </p>
-                  </div>
-                  <div className="pt-2 border-t border-border/30">
-                    <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                      {t("technologies")}
-                    </p>
-                    <p className="text-sm font-normal text-foreground leading-relaxed">
-                      {t("technologiesList")}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                        {t("dataSources")}
+                      </p>
+                      <p className="text-sm font-normal text-foreground leading-relaxed">
+                        {t("dataSourcesList")}
+                      </p>
+                    </div>
+                    <div className="pt-2 border-t border-border/30">
+                      <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                        {t("technologies")}
+                      </p>
+                      <p className="text-sm font-normal text-foreground leading-relaxed">
+                        {t("technologiesList")}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </SpotlightCard>
 
               {/* Contact Card */}
-              <Card className="border-border/50 bg-card">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-xl bg-green-500/10 p-2 border border-green-500/20">
-                      <Mail className="h-5 w-5 text-green-500" />
+              <SpotlightCard spotlightColor="rgba(34, 197, 94, 0.15)" className="rounded-2xl">
+                <Card className="border-border/50 bg-card h-full">
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-green-500/10 p-2 border border-green-500/20">
+                        <Mail className="h-5 w-5 text-green-500" />
+                      </div>
+                      <CardTitle className="text-foreground">{t("contact")}</CardTitle>
                     </div>
-                    <CardTitle className="text-foreground">{t("contact")}</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                    {t("contactEmail")}
-                  </p>
-                  <a
-                    href="mailto:contact@valio.fi"
-                    className="text-sm font-normal text-primary hover:text-primary/80 transition-colors"
-                  >
-                    contact@valio.fi
-                  </a>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                      {t("contactEmail")}
+                    </p>
+                    <a
+                      href="mailto:contact@valio.fi"
+                      className="text-sm font-normal text-primary hover:text-primary/80 transition-colors"
+                    >
+                      contact@valio.fi
+                    </a>
+                  </CardContent>
+                </Card>
+              </SpotlightCard>
             </div>
           </div>
         );
