@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 
 // This endpoint proxies the n8n webhook from the server side so the client
 // can call it without CORS issues.
-// In development, it defaults to your local n8n instance; you can override
-// this with OUTBOUND_WEBHOOK_URL in .env.local if needed.
+// Defaults to your public tunnel; override with OUTBOUND_WEBHOOK_URL in .env.local if needed.
 const OUTBOUND_WEBHOOK_URL =
   process.env.OUTBOUND_WEBHOOK_URL ||
-  "http://localhost:5678/webhook/fa5d1493-d0fa-4483-bf10-f04187e5c963";
+  "https://n8n.veistera.com/webhook/fa5d1493-d0fa-4483-bf10-f04187e5c963";
 
 export async function GET() {
   try {
