@@ -193,21 +193,20 @@ function mapElevenLabsListItemToCallRecord(conv: ElevenLabsConversationListItem)
   // Full transcript will be fetched when viewing the conversation
   const transcript: TranscriptTurn[] = [];
 
-  // Map status
-  // Check if transcript exists (indicates call is done)
-  const hasTranscript = 
-    (conv.transcript_summary && conv.transcript_summary.length > 0) ||
-    conv.message_count > 0;
+  // Map status - prioritize API status field
+  let status: "completed" | "failed" | "in_progress" = "in_progress"; // Default to in_progress for safety
   
-  let status: "completed" | "failed" | "in_progress" = "completed";
-  // First check if actively processing - always mark as in_progress
+  // Check API status first - this is the source of truth
   if (conv.status === "processing" || conv.status === "initiated") {
     status = "in_progress";
-  } else if (conv.status === "done" || hasTranscript) {
-    // Mark as completed if API says "done" OR transcript exists
+  } else if (conv.status === "done") {
+    // Only mark as completed if API explicitly says "done"
     status = "completed";
   } else if (conv.status === "failed") {
     status = "failed";
+  } else {
+    // If status is unknown or missing, default to in_progress (safer than assuming completed)
+    status = "in_progress";
   }
 
   // Extract customer name - use phone number or default
@@ -343,21 +342,20 @@ function mapElevenLabsFullToCallRecord(conv: ElevenLabsConversationFull): CallRe
     text: turn.message || "",
   }));
 
-  // Map status
-  // Check if transcript exists (indicates call is done)
-  const hasTranscript = 
-    (conv.transcript && conv.transcript.length > 0) ||
-    (conv.analysis?.transcript_summary && conv.analysis.transcript_summary.length > 0);
+  // Map status - prioritize API status field
+  let status: "completed" | "failed" | "in_progress" = "in_progress"; // Default to in_progress for safety
   
-  let status: "completed" | "failed" | "in_progress" = "completed";
-  // First check if actively processing - always mark as in_progress
+  // Check API status first - this is the source of truth
   if (conv.status === "processing" || conv.status === "initiated") {
     status = "in_progress";
-  } else if (conv.status === "done" || hasTranscript) {
-    // Mark as completed if API says "done" OR transcript exists
+  } else if (conv.status === "done") {
+    // Only mark as completed if API explicitly says "done"
     status = "completed";
   } else if (conv.status === "failed") {
     status = "failed";
+  } else {
+    // If status is unknown or missing, default to in_progress (safer than assuming completed)
+    status = "in_progress";
   }
 
   // Extract customer name from phone number or metadata
