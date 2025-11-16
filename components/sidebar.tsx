@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   Phone,
   AlertTriangle,
-  Settings,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslations } from "@/lib/use-translations";
@@ -164,22 +164,22 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
             effectiveExpanded ? "p-4" : "p-3"
           )}>
             <motion.button
-              onClick={() => onViewChange("settings")}
+              onClick={() => onViewChange("info")}
               layout
               transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               className={cn(
                 "group relative flex w-full items-center rounded-xl py-3",
                 effectiveExpanded ? "gap-3 px-3" : "justify-center px-0",
-                currentView === "settings"
+                currentView === "info"
                   ? "bg-primary/10 text-primary dark:bg-primary/20"
                   : "text-muted-foreground hover:bg-muted/40 hover:text-foreground dark:hover:bg-muted/50"
               )}
             >
-              <Settings className="h-5 w-5 flex-shrink-0" />
+              <Info className="h-5 w-5 flex-shrink-0" />
               <AnimatePresence mode="popLayout">
                 {effectiveExpanded && (
                   <motion.span
-                    key="settings"
+                    key="info"
                     initial={{ opacity: 0, x: -8, scale: 0.95 }}
                     animate={{ opacity: 1, x: 0, scale: 1 }}
                     exit={{ opacity: 0, x: -8, scale: 0.95 }}
@@ -192,19 +192,19 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
                     }}
                     className="text-sm font-medium whitespace-nowrap"
                   >
-                    {t("settings")}
+                    {t("info")}
                   </motion.span>
                 )}
               </AnimatePresence>
 
               {/* Active Indicator */}
-              {currentView === "settings" && effectiveExpanded && (
+              {currentView === "info" && effectiveExpanded && (
                 <motion.div
                   layoutId="activeIndicator"
                   className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-primary"
                 />
               )}
-              {currentView === "settings" && !effectiveExpanded && (
+              {currentView === "info" && !effectiveExpanded && (
                 <motion.div
                   className="absolute left-0 top-0 h-full w-1 rounded-r-full bg-blue-500"
                 />
@@ -213,7 +213,7 @@ export function Sidebar({ currentView, onViewChange, onExpandChange }: SidebarPr
               {/* Tooltip for collapsed state */}
               {!effectiveExpanded && (
                 <div className="absolute left-full ml-2 hidden rounded-md bg-popover border border-border px-2 py-1 text-xs text-popover-foreground shadow-lg group-hover:block">
-                  {t("settings")}
+                  {t("info")}
                 </div>
               )}
             </motion.button>

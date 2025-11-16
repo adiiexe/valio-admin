@@ -7,6 +7,7 @@ export const translations = {
     shortages: "Puutteet",
     callsNav: "Puhelut",
     settings: "Asetukset",
+    info: "Tiedot",
     
     // Dashboard Overview
     welcomeBack: "Tervetuloa takaisin",
@@ -105,6 +106,25 @@ export const translations = {
     configureDashboard: "Määritä hallintapaneeli ja integraatiot",
     settingsPanelComingSoon: "Asetusikkuna tulossa pian...",
     
+    // Info Page
+    aboutSection: "Tietoja",
+    aboutDescription: "AI-pohjainen toimitusluotettavuushallintapaneeli Valio Aimo -toiminnoille",
+    dataSources: "Tietolähteet",
+    dataSourcesList: "ElevenLabs API, Staattiset JSON-tiedostot, Lähtevä webhook",
+    technologies: "Teknologiat",
+    technologiesList: "Next.js, React, Tailwind CSS, TypeScript",
+    contact: "Yhteystiedot",
+    contactEmail: "Sähköposti",
+    howItWorks: "Miten se toimii",
+    step1Title: "1. Puutteiden Ennustaminen",
+    step1Description: "Järjestelmä analysoi tilauksia ja ennustaa varastopuutteita ennen kuin ne tapahtuvat",
+    step2Title: "2. AI-puhelut Asiakkaille",
+    step2Description: "Kun puute havaitaan, AI-agentti soittaa automaattisesti asiakkaalle ja ehdottaa korvaavia tuotteita",
+    step3Title: "3. Korvausehdotukset",
+    step3Description: "AI analysoi tuotteet ja ehdottaa parhaita korvaavia vaihtoehtoja asiakkaan tarpeiden mukaan",
+    step4Title: "4. Seuranta ja Raportointi",
+    step4Description: "Hallintapaneeli näyttää reaaliaikaiset metriikat, hyväksymisasteet ja ratkaistut puutteet",
+    
     // Toast Messages
     error: "Virhe",
     failedToLoadData: "Tietojen lataaminen epäonnistui",
@@ -128,6 +148,7 @@ export const translations = {
     shortages: "Shortages",
     callsNav: "Calls",
     settings: "Settings",
+    info: "Info",
     
     // Dashboard Overview
     welcomeBack: "Welcome back",
@@ -225,6 +246,25 @@ export const translations = {
     // Settings Page
     configureDashboard: "Configure your dashboard and integrations",
     settingsPanelComingSoon: "Settings panel coming soon...",
+    
+    // Info Page
+    aboutSection: "About",
+    aboutDescription: "AI-powered delivery reliability dashboard for Valio Aimo operations",
+    dataSources: "Data Sources",
+    dataSourcesList: "ElevenLabs API, Static JSON files, Outbound webhook",
+    technologies: "Technologies",
+    technologiesList: "Next.js, React, Tailwind CSS, TypeScript",
+    contact: "Contact",
+    contactEmail: "Contact Email",
+    howItWorks: "How It Works",
+    step1Title: "1. Predict Shortages",
+    step1Description: "The system analyzes orders and predicts inventory shortages before they occur",
+    step2Title: "2. AI Calls to Customers",
+    step2Description: "When a shortage is detected, the AI agent automatically calls the customer and suggests replacement products",
+    step3Title: "3. Replacement Suggestions",
+    step3Description: "AI analyzes products and suggests the best replacement options based on customer needs",
+    step4Title: "4. Tracking & Reporting",
+    step4Description: "The dashboard shows real-time metrics, acceptance rates, and resolved shortages",
     
     // Toast Messages
     error: "Error",

@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   Phone,
   AlertTriangle,
-  Settings,
+  Info,
 } from "lucide-react";
 import { useTranslations } from "@/lib/use-translations";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
@@ -94,15 +94,15 @@ export function SidebarNew({ currentView, onViewChange, onExpandChange }: Sideba
           </nav>
         </div>
 
-        {/* Footer - Settings */}
+        {/* Footer - Info */}
         <div className="border-t border-neutral-800 pt-2 px-2">
           <SidebarLink
             link={{
-              label: t("settings"),
-              icon: <Settings className="h-5 w-5 flex-shrink-0" />,
+              label: t("info"),
+              icon: <Info className="h-5 w-5 flex-shrink-0" />,
             }}
-            isActive={currentView === "settings"}
-            onClick={() => onViewChange("settings")}
+            isActive={currentView === "info"}
+            onClick={() => onViewChange("info")}
           />
         </div>
       </SidebarBody>
