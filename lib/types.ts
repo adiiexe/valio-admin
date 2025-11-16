@@ -16,6 +16,19 @@ export type ShortagePrediction = {
   suggestedReplacements: ReplacementSuggestion[];
 };
 
+export type ObservedShortage = {
+  id: string;
+  company: string;
+  missingProduct: string;
+  replacementProduct: string;
+  replacementProductId: string;
+  missingProductQty: number;
+  replacementProductQty: number;
+  orderDay: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+};
+
 export type TranscriptTurn = {
   speaker: "agent" | "customer";
   text: string;

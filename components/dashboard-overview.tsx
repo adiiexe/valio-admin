@@ -58,7 +58,7 @@ export function DashboardOverview({
     {
       label: t("acceptanceRate"),
       value: `${acceptanceRate}%`,
-      change: `+5% ${t("fromLastWeek")}`,
+      change: t("acceptanceRate"),
       icon: CheckCircle2,
       color: "text-green-400",
       bgColor: "bg-green-500/10",

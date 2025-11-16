@@ -6,7 +6,7 @@ import { DashboardOverview } from "@/components/dashboard-overview";
 import { PredictionsSection } from "@/components/predictions-section";
 import { CallsSectionsSeparated } from "@/components/calls-sections-separated";
 import { CallDetailsDialog } from "@/components/call-details-dialog";
-import { ShortagePrediction, CallRecord } from "@/lib/types";
+import { ShortagePrediction, CallRecord, ObservedShortage } from "@/lib/types";
 import { formatProductName } from "@/lib/format-product-name";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -35,6 +35,9 @@ const CALLS_URL =
 const OUTBOUND_WEBHOOK_URL =
   process.env.NEXT_PUBLIC_OUTBOUND_CALLS_WEBHOOK_URL ||
   "/api/outbound-shortages";
+const OBSERVED_WEBHOOK_URL =
+  process.env.NEXT_PUBLIC_OBSERVED_SHORTAGES_WEBHOOK_URL ||
+  "/api/observed-shortages";
 
 // Shape of outbound resolution entries coming from the n8n webhook
 type OutboundWebhookRow = {
@@ -53,6 +56,41 @@ type OutboundWebhookRow = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+// Shape of observed shortages coming from inbound call issues webhook
+type ObservedWebhookRow = {
+  company?: string | null;
+  missing_product?: string | null;
+  replacement_product?: string | null;
+  replacement_product_id?: string | null;
+  missing_product_qty?: number | null;
+  replacement_product_qty?: number | null;
+  order_day?: string | null;
+  id?: number | string;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+// Some n8n webhooks wrap rows in a `data` array or array-of-object-with-data.
+// Normalize into a flat row array.
+function extractWebhookRows<T = any>(json: any): T[] {
+  if (!json) return [];
+
+  if (Array.isArray(json)) {
+    if (json.length === 0) return [];
+    const first = json[0] as any;
+    if (first && Array.isArray(first.data)) {
+      return first.data as T[];
+    }
+    return json as T[];
+  }
+
+  if (json && Array.isArray(json.data)) {
+    return json.data as T[];
+  }
+
+  return [];
+}
 
 // Map the prediction API response shape to our ShortagePrediction[] domain model.
 function mapPredictionsResponse(raw: any): ShortagePrediction[] {
@@ -201,7 +239,7 @@ async function fetchShortagePredictions(): Promise<ShortagePrediction[]> {
 
 function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" | "en") => void }) {
   const [predictions, setPredictions] = useState<ShortagePrediction[]>([]);
-  const [observedShortages, setObservedShortages] = useState<ShortagePrediction[]>([]);
+  const [observedShortages, setObservedShortages] = useState<ObservedShortage[]>([]);
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentView, setCurrentView] = useState("dashboard");
@@ -308,119 +346,185 @@ function DashboardContent({ onLanguageChange }: { onLanguageChange: (lang: "fi" 
   // Poll outbound resolution webhook periodically to auto-resolve shortages
   useEffect(() => {
     if (isLoading) return;
-    if (!OUTBOUND_WEBHOOK_URL) return;
+    if (!OUTBOUND_WEBHOOK_URL && !OBSERVED_WEBHOOK_URL) return;
 
-    const pollWebhook = async () => {
+    const pollWebhooks = async () => {
       try {
-        console.log(
-          "[Dashboard] Polling outbound shortages webhook at",
-          new Date().toISOString(),
-          "via",
-          OUTBOUND_WEBHOOK_URL
-        );
-
-        const res = await fetch(OUTBOUND_WEBHOOK_URL);
-        if (!res.ok) {
-          console.warn(
-            "[Dashboard] Outbound webhook returned status:",
-            res.status
+        // 1) Outbound webhook: auto-resolve predicted shortages
+        if (OUTBOUND_WEBHOOK_URL) {
+          console.log(
+            "[Dashboard] Polling outbound shortages webhook at",
+            new Date().toISOString(),
+            "via",
+            OUTBOUND_WEBHOOK_URL
           );
-          return;
-        }
 
-        const json = await res.json();
-        if (!Array.isArray(json)) {
-          console.warn(
-            "[Dashboard] Outbound webhook payload was not an array; got",
-            json
-          );
-          return;
-        }
+          const res = await fetch(OUTBOUND_WEBHOOK_URL);
+          if (!res.ok) {
+            console.warn(
+              "[Dashboard] Outbound webhook returned status:",
+              res.status
+            );
+          } else {
+            const json = await res.json();
+            const rows = extractWebhookRows<OutboundWebhookRow>(json);
 
-        const rows = json as OutboundWebhookRow[];
-        console.log(
-          "[Dashboard] Outbound webhook returned rows:",
-          rows.length,
-          rows
-        );
+            if (!Array.isArray(rows) || rows.length === 0) {
+              console.log("[Dashboard] Outbound webhook returned no rows");
+            } else {
+              console.log(
+                "[Dashboard] Outbound webhook returned rows:",
+                rows.length,
+                rows
+              );
 
-        setPredictions((prev: ShortagePrediction[]): ShortagePrediction[] => {
-          if (!Array.isArray(prev) || prev.length === 0) return prev;
+              setPredictions((prev: ShortagePrediction[]): ShortagePrediction[] => {
+                if (!Array.isArray(prev) || prev.length === 0) return prev;
 
-          let changed = false;
+                let changed = false;
 
-          const next: ShortagePrediction[] = prev.map((prediction) => {
-            const match = rows.find((row) => {
-              const sameProductId =
-                normalize(row.product_id) === normalize(prediction.sku);
+                const next: ShortagePrediction[] = prev.map((prediction) => {
+                  const match = rows.find((row) => {
+                    const sameProductId =
+                      normalize(row.product_id ?? "") === normalize(prediction.sku);
 
-              const webhookName = row.product_name ?? row.Tuote;
-              const sameProductName =
-                normalize(webhookName) === normalize(prediction.productName);
+                    const webhookName = row.product_name ?? row.Tuote;
+                    const sameProductName =
+                      webhookName &&
+                      normalize(webhookName) === normalize(prediction.productName);
 
-              return row.replaced === true && (sameProductId || sameProductName);
-            });
+                    return row.replaced === true && (sameProductId || sameProductName);
+                  });
 
-            if (match && prediction.status !== "resolved") {
-              changed = true;
-              console.log("[Dashboard] Auto-resolved shortage from webhook", {
-                prediction,
-                match,
+                  if (match && prediction.status !== "resolved") {
+                    changed = true;
+                    console.log("[Dashboard] Auto-resolved shortage from webhook", {
+                      prediction,
+                      match,
+                    });
+                    return {
+                      ...prediction,
+                      status: "resolved" as ShortagePrediction["status"],
+                    };
+                  }
+
+                  return prediction;
+                });
+
+                return changed ? next : prev;
               });
-              return {
-                ...prediction,
-                status: "resolved" as ShortagePrediction["status"],
-              };
             }
+          }
+        }
 
-            return prediction;
-          });
+        // 2) Observed shortages webhook: inbound reported issues
+        if (OBSERVED_WEBHOOK_URL) {
+          console.log(
+            "[Dashboard] Polling observed shortages webhook at",
+            new Date().toISOString(),
+            "via",
+            OBSERVED_WEBHOOK_URL
+          );
 
-          return changed ? next : prev;
-        });
+          const resObserved = await fetch(OBSERVED_WEBHOOK_URL);
+          if (!resObserved.ok) {
+            console.warn(
+              "[Dashboard] Observed webhook returned status:",
+              resObserved.status
+            );
+          } else {
+            const jsonObserved = await resObserved.json();
+            const rowsObserved = extractWebhookRows<ObservedWebhookRow>(jsonObserved);
 
-        // Extract observed shortages (items that haven't been replaced)
-        const observed: ShortagePrediction[] = rows
-          .filter((row) => row.replaced !== true && (row.called === true || row.called === null))
-          .map((row, index) => {
-            const rawProductName = row.product_name ?? row.Tuote ?? "Unknown Product";
-            const productName = formatProductName(rawProductName);
-            const productId = String(row.product_id ?? row.id ?? `observed-${index}`);
-            const customerNumber = String(row.customer_number ?? "Unknown Customer");
-            const rawReplacementProduct = row.replacedWith ?? null;
-            const replacementProduct = rawReplacementProduct ? formatProductName(rawReplacementProduct) : null;
+            if (!Array.isArray(rowsObserved) || rowsObserved.length === 0) {
+              console.log("[Dashboard] Observed webhook returned no rows");
+              setObservedShortages([]);
+            } else {
+              console.log(
+                "[Dashboard] Observed webhook returned rows:",
+                rowsObserved.length,
+                rowsObserved
+              );
 
-            return {
-              id: `observed-${productId}-${index}`,
-              sku: String(row.product_id ?? productId),
-              productName: productName,
-              customerName: customerNumber,
-              riskScore: 1.0, // Observed shortages are 100% risk
-              status: "pending" as const,
-              orderId: `OBS-${productId}`,
-              suggestedReplacements: [],
-              type: "observed" as const,
-              replacementProduct: replacementProduct, // Store replacement product name
-            };
-          });
+              const observed: ObservedShortage[] = rowsObserved
+                .filter((row) => {
+                  // Filter out rows where any key string field is empty
+                  const company = normalize(row.company ?? "");
+                  const missingProduct = normalize(row.missing_product ?? "");
+                  const replacementProduct = normalize(row.replacement_product ?? "");
+                  const replacementProductId = normalize(row.replacement_product_id ?? "");
 
-        // Remove duplicates and update observed shortages
-        const uniqueObserved = observed.filter((obs, index, self) =>
-          index === self.findIndex((o) => o.sku === obs.sku && o.customerName === obs.customerName)
-        );
+                  if (!company || !missingProduct || !replacementProduct || !replacementProductId) {
+                    return false;
+                  }
 
-        setObservedShortages(uniqueObserved);
+                  const missingQty =
+                    typeof row.missing_product_qty === "number"
+                      ? row.missing_product_qty
+                      : Number(row.missing_product_qty ?? 0);
+                  const replacementQty =
+                    typeof row.replacement_product_qty === "number"
+                      ? row.replacement_product_qty
+                      : Number(row.replacement_product_qty ?? 0);
+
+                  if (!Number.isFinite(missingQty) || missingQty <= 0) return false;
+                  if (!Number.isFinite(replacementQty) || replacementQty <= 0) return false;
+
+                  return true;
+                })
+                .map((row, index) => {
+                  const id = String(row.id ?? `observed-${index}`);
+
+                  const missingQty =
+                    typeof row.missing_product_qty === "number"
+                      ? row.missing_product_qty
+                      : Number(row.missing_product_qty ?? 0);
+                  const replacementQty =
+                    typeof row.replacement_product_qty === "number"
+                      ? row.replacement_product_qty
+                      : Number(row.replacement_product_qty ?? 0);
+
+                  return {
+                    id,
+                    company: String(row.company ?? "").trim(),
+                    missingProduct: String(row.missing_product ?? "").trim(),
+                    replacementProduct: String(row.replacement_product ?? "").trim(),
+                    replacementProductId: String(row.replacement_product_id ?? "").trim(),
+                    missingProductQty: missingQty,
+                    replacementProductQty: replacementQty,
+                    orderDay: row.order_day ?? null,
+                    createdAt: row.createdAt ?? null,
+                    updatedAt: row.updatedAt ?? null,
+                  };
+                });
+
+              // De-duplicate by id and sort by most recently updated
+              const uniqueById = new Map<string, ObservedShortage>();
+              for (const item of observed) {
+                uniqueById.set(item.id, item);
+              }
+
+              const sortedObserved = Array.from(uniqueById.values()).sort((a, b) => {
+                const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+                const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+                return bTime - aTime;
+              });
+
+              setObservedShortages(sortedObserved);
+            }
+          }
+        }
       } catch (error) {
         console.error(
-          "[Dashboard] Failed to poll outbound webhook:",
+          "[Dashboard] Failed to poll webhooks:",
           (error as any)?.message || error
         );
       }
     };
 
     // Initial poll, then every 60 seconds
-    void pollWebhook();
-    const intervalId = setInterval(pollWebhook, 60_000);
+    void pollWebhooks();
+    const intervalId = setInterval(pollWebhooks, 60_000);
 
     return () => clearInterval(intervalId);
   }, [isLoading]);

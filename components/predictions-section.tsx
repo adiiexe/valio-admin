@@ -11,8 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ShortagePrediction } from "@/lib/types";
+import { ObservedShortage, ShortagePrediction } from "@/lib/types";
 import { ShortageDetailsSheet } from "./shortage-details-sheet";
+import { ObservedShortageDetailsSheet } from "./observed-shortage-details-sheet";
 import { AlertTriangle, Eye } from "lucide-react";
 import { AnimatedIcon } from "@/components/ui/animated-icon";
 import { useTranslations } from "@/lib/use-translations";
@@ -22,7 +23,7 @@ import { formatProductName } from "@/lib/format-product-name";
 
 interface PredictionsSectionProps {
   predictions: ShortagePrediction[];
-  observedShortages?: ShortagePrediction[];
+  observedShortages?: ObservedShortage[];
 }
 
 export function PredictionsSection({
@@ -32,6 +33,8 @@ export function PredictionsSection({
   const { t } = useTranslations();
   const [selectedShortage, setSelectedShortage] = useState<ShortagePrediction | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [selectedObservedShortage, setSelectedObservedShortage] = useState<ObservedShortage | null>(null);
+  const [isObservedSheetOpen, setIsObservedSheetOpen] = useState(false);
 
   const handleViewDetails = (shortage: ShortagePrediction) => {
     setSelectedShortage(shortage);
@@ -84,24 +87,40 @@ export function PredictionsSection({
     return b.riskScore - a.riskScore;
   });
 
-  // Sort observed shortages: resolved to bottom, then by risk score
+  // Sort observed shortages: newest first based on updatedAt
   const sortedObserved = [...observedShortages].sort((a, b) => {
-    if (a.status === "resolved" && b.status !== "resolved") return 1;
-    if (a.status !== "resolved" && b.status === "resolved") return -1;
-    return b.riskScore - a.riskScore;
+    const aTime = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const bTime = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return bTime - aTime;
   });
 
-  const renderTable = (shortages: ShortagePrediction[], isObserved: boolean = false) => (
+  const formatRelativeTime = (iso?: string | null) => {
+    if (!iso) return "—";
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "—";
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0) return "just now";
+
+    const diffMinutes = Math.floor(diffMs / 60000);
+    if (diffMinutes < 1) return "just now";
+    if (diffMinutes < 60) return `${diffMinutes} min ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} hrs ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
+  };
+
+  const renderTable = (shortages: ShortagePrediction[]) => (
     <Table>
       <TableHeader>
         <TableRow className="border-border/30 hover:bg-transparent dark:border-border">
           <TableHead className="text-muted-foreground font-medium">{t("product")}</TableHead>
           <TableHead className="text-muted-foreground font-medium">{t("customer")}</TableHead>
-          {isObserved ? (
-            <TableHead className="text-muted-foreground font-medium">{t("replacementProduct")}</TableHead>
-          ) : (
-            <TableHead className="text-muted-foreground font-medium">{t("risk")}</TableHead>
-          )}
+          <TableHead className="text-muted-foreground font-medium">{t("risk")}</TableHead>
           <TableHead className="text-muted-foreground font-medium">{t("status")}</TableHead>
           <TableHead className="text-right text-muted-foreground font-medium">{t("action")}</TableHead>
         </TableRow>
@@ -122,13 +141,7 @@ export function PredictionsSection({
             <TableCell className="font-normal text-muted-foreground">
               {shortage.customerName}
             </TableCell>
-            {isObserved ? (
-              <TableCell className="font-normal text-foreground">
-                {shortage.replacementProduct ? formatProductName(shortage.replacementProduct) : t("noReplacement")}
-              </TableCell>
-            ) : (
-              <TableCell>{getRiskBadge(shortage.riskScore)}</TableCell>
-            )}
+            <TableCell>{getRiskBadge(shortage.riskScore)}</TableCell>
             <TableCell>{getStatusBadge(shortage.status)}</TableCell>
             <TableCell className="text-right">
               <Button
@@ -138,6 +151,73 @@ export function PredictionsSection({
                 onClick={(e) => {
                   e.stopPropagation();
                   handleViewDetails(shortage);
+                }}
+              >
+                <Eye className="mr-1 h-4 w-4" />
+                {shortage.status === "resolved"
+                  ? "Resolved with AI agent outbound call"
+                  : t("details")}
+              </Button>
+            </TableCell>
+          </SpotlightTableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
+  const renderObservedTable = (shortages: ObservedShortage[]) => (
+    <Table>
+      <TableHeader>
+        <TableRow className="border-border/30 hover:bg-transparent dark:border-border">
+          <TableHead className="text-muted-foreground font-medium w-[120px]">
+            {t("time")}
+          </TableHead>
+          <TableHead className="text-muted-foreground font-medium">Company</TableHead>
+          <TableHead className="text-muted-foreground font-medium">{t("product")}</TableHead>
+          <TableHead className="text-muted-foreground font-medium">{t("replacementProduct")}</TableHead>
+          <TableHead className="text-right text-muted-foreground font-medium w-[120px]">
+            Qty
+          </TableHead>
+          <TableHead className="text-right text-muted-foreground font-medium w-[140px]">
+            {t("action")}
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {shortages.map((shortage) => (
+          <SpotlightTableRow
+            key={shortage.id}
+            spotlightColor="rgba(59, 130, 246, 0.15)"
+            className="border-border/30 transition-colors hover:bg-muted/30 dark:hover:bg-muted/50"
+            onClick={() => {
+              setSelectedObservedShortage(shortage);
+              setIsObservedSheetOpen(true);
+            }}
+          >
+            <TableCell className="text-xs text-muted-foreground">
+              {formatRelativeTime(shortage.updatedAt ?? shortage.createdAt)}
+            </TableCell>
+            <TableCell className="font-medium text-foreground">
+              {shortage.company}
+            </TableCell>
+            <TableCell className="font-normal text-foreground">
+              {shortage.missingProduct}
+            </TableCell>
+            <TableCell className="font-normal text-foreground">
+              {shortage.replacementProduct}
+            </TableCell>
+            <TableCell className="text-right font-medium text-foreground">
+              {shortage.missingProductQty} → {shortage.replacementProductQty}
+            </TableCell>
+            <TableCell className="text-right">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedObservedShortage(shortage);
+                  setIsObservedSheetOpen(true);
                 }}
               >
                 <Eye className="mr-1 h-4 w-4" />
@@ -169,7 +249,7 @@ export function PredictionsSection({
             <CardContent>
               <div className="overflow-x-auto">
                 {sortedPredictions.length > 0 ? (
-                  renderTable(sortedPredictions, false)
+                renderTable(sortedPredictions)
                 ) : (
                   <p className="text-center text-muted-foreground py-8">{t("noShortages")}</p>
                 )}
@@ -194,7 +274,7 @@ export function PredictionsSection({
             <CardContent>
               <div className="overflow-x-auto">
                 {sortedObserved.length > 0 ? (
-                  renderTable(sortedObserved, true)
+                renderObservedTable(sortedObserved)
                 ) : (
                   <p className="text-center text-muted-foreground py-8">{t("noShortages")}</p>
                 )}
@@ -208,6 +288,11 @@ export function PredictionsSection({
         shortage={selectedShortage}
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
+      />
+      <ObservedShortageDetailsSheet
+        shortage={selectedObservedShortage}
+        isOpen={isObservedSheetOpen}
+        onClose={() => setIsObservedSheetOpen(false)}
       />
     </>
   );

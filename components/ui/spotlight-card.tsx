@@ -15,6 +15,7 @@ export const SpotlightCard = ({
   onClick?: () => void;
 }) => {
   const divRef = useRef<HTMLDivElement>(null);
+  const isInteractive = !!onClick;
   const [isFocused, setIsFocused] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
@@ -59,27 +60,31 @@ export const SpotlightCard = ({
   const defaultDarkColor = "rgba(99, 0, 255, 0.25)"; // More visible purple glow for dark mode
 
   const handleMouseMove = (e: { clientX: number; clientY: number }) => {
-    if (!divRef.current || isFocused) return;
+    if (!isInteractive || !divRef.current || isFocused) return;
 
     const rect = divRef.current.getBoundingClientRect();
     setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
 
   const handleFocus = () => {
+    if (!isInteractive) return;
     setIsFocused(true);
     setOpacity(1);
   };
 
   const handleBlur = () => {
+    if (!isInteractive) return;
     setIsFocused(false);
     setOpacity(0);
   };
 
   const handleMouseEnter = () => {
+    if (!isInteractive) return;
     setOpacity(1);
   };
 
   const handleMouseLeave = () => {
+    if (!isInteractive) return;
     setOpacity(0);
   };
 
@@ -109,22 +114,24 @@ export const SpotlightCard = ({
   return (
     <div
       ref={divRef}
-      onMouseMove={handleMouseMove}
-      onFocus={handleFocus}
-      onBlur={handleBlur}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseMove={isInteractive ? handleMouseMove : undefined}
+      onFocus={isInteractive ? handleFocus : undefined}
+      onBlur={isInteractive ? handleBlur : undefined}
+      onMouseEnter={isInteractive ? handleMouseEnter : undefined}
+      onMouseLeave={isInteractive ? handleMouseLeave : undefined}
       onClick={onClick}
       className={cn("relative overflow-hidden", className)}
     >
       {/* Spotlight effect */}
-      <div
-        className="pointer-events-none absolute inset-0 transition-opacity duration-500 ease-in-out"
-        style={{
-          opacity,
-          background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${currentColor}, transparent 80%)`,
-        }}
-      />
+      {isInteractive && (
+        <div
+          className="pointer-events-none absolute inset-0 transition-opacity duration-500 ease-in-out"
+          style={{
+            opacity,
+            background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${currentColor}, transparent 80%)`,
+          }}
+        />
+      )}
       {children}
     </div>
   );
